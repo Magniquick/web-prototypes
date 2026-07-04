@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NAVON v2028 — Boxed Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @font-face{
+    font-family:"DSEG7";
+    src:url("fonts/DSEG7Classic-Regular.woff2") format("woff2");
+    font-display:swap;
+  }
+
+  :root{
+    --paper:      #f5f2ee;
+    --paper-2:    #efeae3;
+    --paper-3:    #e7e1d8;
+    --ink:        #1a1714;
+    --ink-2:      #4b453e;
+    --ink-3:      #8a8177;
+    --rule:       #cec6ba;
+    --rule-2:     #ded7cc;
+    --gold:       #c8912e;
+    --gold-deep:  #9a6d1f;
+    --grot:"Space Grotesk", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(#c9c1b5aa .6px, transparent .7px),
+      linear-gradient(160deg,#e4ddd2,#d6cec1);
+    background-size:22px 22px, cover;
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:14px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:34px 20px 60px;
+    min-height:100vh;
+  }
+  a{color:var(--ink); text-decoration:none; border-bottom:1px solid var(--gold)}
+  a:hover{color:var(--gold-deep)}
+  ::selection{background:var(--gold); color:#fff}
+
+  .wrap{max-width:1140px; margin:0 auto}
+
+  /* ---- top marketing strip ---- */
+  .topline{
+    display:flex; justify-content:space-between; align-items:baseline; gap:14px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-2); margin:0 4px 18px; padding-bottom:12px;
+    border-bottom:1px solid #b9b1a4;
+  }
+  .topline .g{color:var(--gold-deep); font-weight:600}
+  .topline .r{display:flex; gap:14px; flex-wrap:wrap}
+
+  /* ---- the two package panels ---- */
+  .panels{display:grid; grid-template-columns:1fr 1fr; gap:26px; align-items:start}
+  @media (max-width:900px){ .panels{grid-template-columns:1fr} }
+
+  .panel{
+    background:var(--paper);
+    border:1px solid #c4bcae;
+    position:relative;
+    box-shadow:
+      0 1px 0 #fff inset,
+      0 30px 60px -34px rgba(40,30,15,.55),
+      0 6px 18px -12px rgba(40,30,15,.35);
+    overflow:hidden;
+  }
+  /* subtle physical box perspective on wide screens */
+  @media (min-width:1000px) and (prefers-reduced-motion: no-preference){
+    .panel{transition:transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s}
+    .panel-front{transform:perspective(2200px) rotateY(2.2deg)}
+    .panel-back{transform:perspective(2200px) rotateY(-2.2deg)}
+    .panels:hover .panel{transform:perspective(2200px) rotateY(0)}
+  }
+
+  /* registration marks in corners */
+  .reg{position:absolute; width:14px; height:14px; opacity:.5; pointer-events:none}
+  .reg::before,.reg::after{content:""; position:absolute; background:var(--ink-3)}
+  .reg::before{left:6px; top:0; width:1px; height:14px}
+  .reg::after{top:6px; left:0; width:14px; height:1px}
+  .reg.tl{top:8px; left:8px} .reg.tr{top:8px; right:8px}
+  .reg.bl{bottom:8px; left:8px} .reg.br{bottom:8px; right:8px}
+
+  .p-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 18px; border-bottom:1px solid var(--ink);
+    font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-3);
+  }
+  .p-head .side{
+    background:var(--ink); color:var(--paper); font-weight:600;
+    padding:2px 8px; letter-spacing:.12em;
+  }
+
+  .p-body{padding:22px 26px 26px}
+
+  .label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-3);
+  }
+  .chip{
+    display:inline-block; background:var(--gold); color:#231a08;
+    font-family:var(--mono); font-weight:600; font-size:10px; letter-spacing:.14em;
+    padding:3px 8px; text-transform:uppercase;
+  }
+  .chip.out{background:transparent; color:var(--gold-deep); border:1px solid var(--gold)}
+
+  /* ================= FRONT ================= */
+  .brandbar{display:flex; justify-content:space-between; align-items:flex-start; gap:16px}
+  .brand{
+    font-family:var(--grot); font-weight:700; font-size:clamp(46px,8vw,74px);
+    line-height:.86; letter-spacing:-.02em; margin:2px 0 0;
+  }
+  .brand .tm{font-size:.3em; vertical-align:top; color:var(--ink-3); font-weight:500}
+  .kata{font-family:var(--grot); font-weight:500; font-size:13px; letter-spacing:.34em; color:var(--ink-2); margin:6px 0 0}
+  .model-readout{
+    text-align:right; border:1px solid var(--rule); background:var(--paper-2); padding:7px 10px; min-width:118px;
+  }
+  .model-readout .dseg{font-family:"DSEG7",var(--mono); font-size:19px; color:var(--ink); letter-spacing:.02em}
+  .model-readout .sm{font-family:var(--mono); font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--ink-3); margin-top:3px}
+
+  .tagline{
+    font-family:var(--grot); font-weight:600; font-size:clamp(13px,2vw,16px);
+    letter-spacing:.14em; text-transform:uppercase; color:var(--ink); margin:16px 0 0;
+  }
+  .tagline .dot{color:var(--gold-deep)}
+
+  /* hero + callouts */
+  .stage{
+    position:relative; margin:22px 0 4px; padding:26px 8px 22px;
+    border:1px solid var(--rule); background:
+      linear-gradient(#f7f4f0,#ece6dd);
+  }
+  .stage-grid{
+    position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background:
+      linear-gradient(#00000008 1px, transparent 1px),
+      linear-gradient(90deg,#00000008 1px, transparent 1px);
+    background-size:26px 26px;
+  }
+  .hero-frame{
+    width:150px; height:150px; margin:0 auto; position:relative; z-index:1;
+    border:1px solid var(--ink); padding:8px; background:var(--paper);
+    box-shadow:0 12px 26px -16px rgba(40,30,15,.6);
+  }
+  .hero-frame::before{
+    content:""; position:absolute; inset:-1px; border:1px solid var(--gold); opacity:.6;
+    clip-path:polygon(0 0,26px 0,26px 1px,1px 1px,1px 26px,0 26px, 0 100%,26px 100%,26px calc(100% - 1px),1px calc(100% - 1px),1px calc(100% - 26px),0 calc(100% - 26px));
+  }
+  .hero-frame img{width:100%; height:100%; object-fit:cover; display:block; filter:grayscale(.15) contrast(1.02)}
+  .hero-cap{text-align:center; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:12px 0 0; position:relative; z-index:1}
+
+  /* callout labels */
+  .callouts{list-style:none; margin:20px 0 0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .callouts li{
+    display:flex; gap:9px; align-items:flex-start; font-size:11.5px; color:var(--ink-2); line-height:1.35;
+    border:1px solid var(--rule-2); background:var(--paper-2); padding:8px 10px;
+  }
+  .callouts .n{
+    flex:0 0 auto; width:18px; height:18px; border-radius:50%;
+    background:var(--ink); color:var(--paper); font-family:var(--mono); font-weight:600;
+    font-size:10px; display:grid; place-items:center; margin-top:1px;
+  }
+  .callouts b{color:var(--ink); font-weight:600; font-family:var(--grot)}
+  @media (max-width:460px){ .callouts{grid-template-columns:1fr} }
+
+  .front-foot{
+    display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+    margin-top:20px; padding-top:14px; border-top:1px solid var(--ink);
+  }
+  .marks{display:flex; align-items:center; gap:14px}
+  .mark-ico{
+    width:26px; height:26px; border:1px solid var(--ink); border-radius:50%;
+    display:grid; place-items:center; font-family:var(--grot); font-weight:700; font-size:11px; color:var(--ink);
+  }
+  .edition{font-family:var(--mono); font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--ink-3); text-align:right}
+  .edition b{color:var(--gold-deep); display:block; font-size:13px; letter-spacing:.06em}
+
+  /* ================= BACK ================= */
+  .sec-title{
+    display:flex; align-items:center; gap:10px; margin:0 0 12px;
+    border-bottom:2px solid var(--ink); padding-bottom:6px;
+  }
+  .sec-title h3{font-family:var(--grot); font-weight:700; font-size:14px; letter-spacing:.05em; text-transform:uppercase; margin:0}
+  .sec-title .rn{margin-left:auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; color:var(--ink-3)}
+  .block{margin:0 0 22px}
+
+  ul.contents{list-style:none; margin:0; padding:0; font-size:12px}
+  ul.contents li{
+    display:flex; justify-content:space-between; gap:12px; padding:4px 0;
+    border-bottom:1px dotted var(--rule-2); color:var(--ink-2);
+  }
+  ul.contents li b{color:var(--ink); font-weight:600}
+  ul.contents li .q{font-family:var(--mono); color:var(--gold-deep); white-space:nowrap}
+
+  /* nutrition/spec table */
+  table.spec{border-collapse:collapse; width:100%; font-family:var(--mono); font-size:11.5px}
+  table.spec caption{
+    caption-side:top; text-align:left; font-family:var(--grot); font-weight:700;
+    font-size:13px; letter-spacing:.02em; text-transform:uppercase; padding:0 0 4px; color:var(--ink);
+  }
+  table.spec thead th{
+    text-align:left; font-size:9px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ink-2); border-top:4px solid var(--ink); border-bottom:1px solid var(--ink);
+    padding:5px 0; font-weight:600;
+  }
+  table.spec thead th:last-child{text-align:right}
+  table.spec tbody td{
+    padding:6px 0; border-bottom:1px solid var(--rule-2); vertical-align:top; text-align:left;
+  }
+  table.spec tbody td:last-child{text-align:right; color:var(--ink-2); white-space:nowrap}
+  table.spec .amt{color:var(--gold-deep); font-weight:600}
+  table.spec .big-rule td{border-bottom:2px solid var(--ink)}
+  table.spec .lead td:first-child{color:var(--ink); font-weight:600}
+  table.spec td .sub{display:block; color:var(--ink-3); font-size:10px; letter-spacing:.02em; margin-top:1px; white-space:normal; text-align:left}
+
+  .req{font-size:11.5px; color:var(--ink-2); line-height:1.55}
+  .req b{color:var(--ink)}
+  .req code{font-family:var(--mono); color:var(--gold-deep)}
+
+  .warn{
+    border:1px solid var(--gold); background:linear-gradient(#faf3e4,#f6ecd6);
+    padding:12px 14px; font-size:11px; line-height:1.55; color:var(--ink-2);
+  }
+  .warn .h{display:flex; align-items:center; gap:8px; margin:0 0 6px; font-family:var(--grot); font-weight:700; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-deep)}
+  .warn .tri{width:15px; height:14px; flex:0 0 auto}
+  .warn ul{margin:0; padding-left:16px}
+  .warn li{margin:2px 0}
+
+  /* barcode */
+  .barcode-block{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap;
+    margin-top:22px; padding-top:16px; border-top:1px solid var(--ink);
+  }
+  .barcode{display:flex; flex-direction:column; gap:5px}
+  .bars{height:52px; width:190px; max-width:100%;
+    /* CSS-drawn barcode via repeating gradient with varied stops */
+    background:
+      repeating-linear-gradient(90deg,
+        var(--ink) 0 2px, transparent 2px 4px,
+        var(--ink) 4px 5px, transparent 5px 8px,
+        var(--ink) 8px 11px, transparent 11px 12px,
+        var(--ink) 12px 13px, transparent 13px 16px,
+        var(--ink) 16px 19px, transparent 19px 21px,
+        var(--ink) 21px 22px, transparent 22px 25px,
+        var(--ink) 25px 28px, transparent 28px 29px);
+    background-color:#fff;
+  }
+  .bar-digits{font-family:var(--mono); font-size:11px; letter-spacing:.42em; color:var(--ink); padding-left:2px}
+  .lot{text-align:right; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); line-height:1.7}
+  .lot b{color:var(--ink); letter-spacing:.06em}
+  .made{display:inline-block; margin-top:4px; border:1px solid var(--ink); padding:2px 7px; font-size:9px; letter-spacing:.14em; color:var(--ink); text-transform:uppercase}
+
+  /* manufacturer fine print */
+  .fineprint{
+    margin-top:20px; padding-top:14px; border-top:1px solid var(--rule);
+    font-family:var(--mono); font-size:10px; line-height:1.65; color:var(--ink-3); letter-spacing:.02em;
+  }
+  .fineprint .contact{display:flex; flex-wrap:wrap; gap:6px 18px; margin:0 0 8px}
+  .fineprint .contact a{display:inline-flex; align-items:center; gap:6px; border-bottom:0; color:var(--ink-2); font-size:10.5px}
+  .fineprint .contact a:hover span{border-bottom:1px solid var(--gold)}
+  .fineprint .contact svg{width:12px; height:12px; fill:var(--ink-3); flex:0 0 auto}
+
+  /* page footer */
+  .pagefoot{
+    text-align:center; margin:34px 4px 0; font-family:var(--mono);
+    font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:#6b6459;
+  }
+  .pagefoot .g{color:var(--gold-deep)}
+
+  /* entrance */
+  .rise{opacity:0; transform:translateY(10px); animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+  .panel-back.rise{animation-delay:.09s}
+  @keyframes rise{to{opacity:1; transform:none}}
+  @media (prefers-reduced-motion: reduce){
+    .rise{opacity:1; transform:none; animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topline">
+    <span><span class="g">NAVON</span> — SYSTEMS ENGINEERING INSTRUMENT · RETAIL EDITION</span>
+    <span class="r">
+      <span>SKU 2028-JL</span>
+      <span>NET WT. 1 DEV</span>
+      <span class="g">FRONT ▸ BACK</span>
+    </span>
+  </div>
+
+  <div class="panels">
+
+    <!-- ============================= FRONT ============================= -->
+    <section class="panel panel-front rise" aria-label="Package front">
+      <i class="reg tl"></i><i class="reg tr"></i><i class="reg bl"></i><i class="reg br"></i>
+
+      <div class="p-head">
+        <span>ナヴォン · Personal Compute Unit</span>
+        <span class="side">Front</span>
+      </div>
+
+      <div class="p-body">
+        <div class="brandbar">
+          <div>
+            <div class="chip">Systems Instrument</div>
+            <h1 class="brand">NAVON<span class="tm">®</span></h1>
+            <p class="kata">ナヴォン・ジョン</p>
+          </div>
+          <div class="model-readout" aria-label="model version readout">
+            <div class="dseg">2.028</div>
+            <div class="sm">Model v2028</div>
+          </div>
+        </div>
+
+        <p class="tagline">Systems <span class="dot">·</span> Security <span class="dot">·</span> Machine&nbsp;Learning</p>
+
+        <!-- hero stage with callouts -->
+        <div class="stage">
+          <div class="stage-grid" aria-hidden="true"></div>
+          <div class="hero-frame">
+            <img src="https://github.com/Magniquick.png" alt="Navon John Lukose — product hero portrait" loading="lazy">
+          </div>
+          <p class="hero-cap">Fig. A — unit shown actual capability, not to scale</p>
+        </div>
+
+        <ol class="callouts">
+          <li><span class="n">1</span><span><b>Mainline kernel</b> — upstream Linux contributor, v6.12 + v5.10 stable</span></li>
+          <li><span class="n">2</span><span><b>CTF rank #1</b> — head of team &ldquo;PlayingG0d&rdquo;, intl top-10</span></li>
+          <li><span class="n">3</span><span><b>RL onboard</b> — Double DQN, Kuhn Poker, ~3 MB / pass</span></li>
+          <li><span class="n">4</span><span><b>Low power</b> — trains on entry-level MX250-class hardware</span></li>
+        </ol>
+
+        <div class="front-foot">
+          <div class="marks" aria-label="brand marks">
+            <span class="mark-ico" title="Magniquick">M</span>
+            <span class="mark-ico" title="registered">®</span>
+            <span class="mark-ico" title="GNU/Linux inside">λ</span>
+            <span class="label">Est. 2024 · Manipal IN</span>
+          </div>
+          <div class="edition">
+            <b>Edition v2028</b>
+            since 2024
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================= BACK ============================= -->
+    <section class="panel panel-back rise" aria-label="Package back">
+      <i class="reg tl"></i><i class="reg tr"></i><i class="reg bl"></i><i class="reg br"></i>
+
+      <div class="p-head">
+        <span class="side">Back</span>
+        <span>Specification · Contents · Fine Print</span>
+      </div>
+
+      <div class="p-body">
+
+        <!-- WHAT'S INSIDE -->
+        <div class="block">
+          <div class="sec-title"><h3>What&rsquo;s Inside</h3><span class="rn">§ 01</span></div>
+          <ul class="contents">
+            <li><span>1 × <b>B.Tech CS student</b> — Manipal, 2nd year</span><span class="q">2024–2028</span></li>
+            <li><span>1 × <b>Kernel contributor</b> — mainline + stable</span><span class="q">assembled</span></li>
+            <li><span>1 × <b>CTF operator</b> — team PlayingG0d</span><span class="q">charged</span></li>
+            <li><span>1 × <b>RL researcher</b> — IIM Kozhikode</span><span class="q">calibrated</span></li>
+            <li><span>3 × open-source repos <span style="color:var(--ink-3)">(★108 flagship)</span></span><span class="q">bundled</span></li>
+            <li><span>∞ × caffeine dependency <span style="color:var(--ink-3)">(not included)</span></span><span class="q">BYO ☕</span></li>
+          </ul>
+        </div>
+
+        <!-- SPEC / NUTRITION FACTS -->
+        <div class="block">
+          <div class="sec-title"><h3>Specification Facts</h3><span class="rn">§ 02</span></div>
+          <table class="spec">
+            <caption>Per Unit · Serving Size 1 Human</caption>
+            <thead>
+              <tr><th>Feature</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              <tr class="lead big-rule"><td>Education</td><td class="amt">2×</td></tr>
+              <tr><td>Manipal Inst. of Technology<span class="sub">B.Tech Computer Science</span></td><td>2024–2028</td></tr>
+              <tr class="big-rule"><td>IIT Madras — BS Data Science<span class="sub">Online · diploma level completed</span></td><td>2023–</td></tr>
+              <tr class="lead"><td>Kernel — mainline<span class="sub"><a href="https://github.com/torvalds/linux/commit/b11a74ac4f545626d0dc95a8ca8c41df90532bf3">ALSA mute-LED quirk · commit b11a74ac ↗</a></span></td><td class="amt">v6.12</td></tr>
+              <tr class="big-rule"><td>Kernel — stable backport</td><td>v5.10</td></tr>
+              <tr class="lead"><td>CTF placement — Citadel 2025<span class="sub">NiteCTF 2024/2025 · #8 intl · ₹7.5k prize</span></td><td class="amt">#1</td></tr>
+              <tr class="lead big-rule"><td>Kuhn Poker — Double DQN<span class="sub"><a href="https://github.com/Magniquick/gym-kuhn-poker">gym-kuhn-poker</a> · <a href="https://github.com/Magniquick/reinforcement-learning">project ↗</a> · <a href="https://typst.app/project/rSMWAKD03peYDTGXp4Mzjr">paper ↗</a></span></td><td class="amt">Nash≈</td></tr>
+              <tr><td>Convergence (MX250 GPU)</td><td>1–2 h</td></tr>
+              <tr><td>Footprint / forward pass</td><td class="amt">3 MB</td></tr>
+              <tr><td>Disclosures (records recovered)</td><td>21k+ / 1k</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SYSTEM REQUIREMENTS -->
+        <div class="block">
+          <div class="sec-title"><h3>System Requirements</h3><span class="rn">§ 03</span></div>
+          <p class="req">
+            <b>OS:</b> <code>GNU/Linux</code> (kernel ≥ 5.10) — <b>Runtime:</b> Python 3 · PyTorch · requests · httpx; Java; C (<code>-std=c23</code>); bash/zsh.
+            <b>Tools:</b> Git · QEMU · Burp Suite · IDA · Docker · GitHub Actions.
+            <b>Accelerator:</b> any GPU, MX250-class sufficient. <b>Network:</b> required for CTF &amp; disclosure. <b>Storage:</b> ~3 MB per model. <b>Not compatible with</b> Windows-only builds (see <a href="https://github.com/Magniquick/atuin-win">atuin-win ★12</a> for shims).
+          </p>
+        </div>
+
+        <!-- WARNINGS -->
+        <div class="block">
+          <div class="warn">
+            <p class="h">
+              <svg class="tri" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 1 23 21H1L12 1z" fill="none" stroke="#9a6d1f" stroke-width="1.6"/><path d="M12 8v6M12 17v.5" stroke="#9a6d1f" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Warnings
+            </p>
+            <ul>
+              <li>May contain traces of caffeine and undefined behaviour.</li>
+              <li>Not fit for safety-critical poker. No warranty; results approximate Nash equilibria.</li>
+              <li>Do not operate during exam season — thread-safety is best-effort only.</li>
+              <li>Contains no AI slop (mostly). Segfaults reported responsibly upstream.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- BARCODE + LOT -->
+        <div class="barcode-block">
+          <div class="barcode">
+            <div class="bars" role="img" aria-label="barcode"></div>
+            <div class="bar-digits">2028 79079 25646</div>
+          </div>
+          <div class="lot">
+            <div><b>LOT</b> NAVON-JL-2028</div>
+            <div><b>BATCH</b> #b11a74ac</div>
+            <div class="made">Made on GNU/Linux</div>
+          </div>
+        </div>
+
+        <!-- MANUFACTURER FINE PRINT -->
+        <div class="fineprint">
+          <div class="contact">
+            <a href="https://github.com/Magniquick" rel="me">
+              <svg viewBox="0 0 24 24"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.32.47-2.39 1.24-3.23-.13-.3-.54-1.53.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.23 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58C20.57 22.29 24 17.8 24 12.5 24 5.87 18.63.5 12 .5z"/></svg>
+              <span>github.com/Magniquick</span>
+            </a>
+            <a href="mailto:navonjohnlukose@gmail.com">
+              <svg viewBox="0 0 24 24"><path d="M2 4h20v16H2V4zm2 2v.5l8 5 8-5V6H4zm16 3-8 5-8-5v9h16V9z"/></svg>
+              <span>navonjohnlukose@gmail.com</span>
+            </a>
+            <a href="tel:+917907925646">
+              <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.3 2.2z"/></svg>
+              <span>+91 79079 25646</span>
+            </a>
+          </div>
+          Manufactured by NAVON JOHN LUKOSE (&ldquo;Magniquick&rdquo;) · Manipal, Kerala IN.
+          Distributed under MIT-0. Contents typeset in Space Grotesk &amp; IBM Plex Mono.
+          Specifications tongue-in-cheek but semantically honest; subject to change without notice
+          as the unit continues to evolve. © 2026. Keep out of reach of recruiters seeking &ldquo;10 yrs experience, age 19&rdquo;.
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <p class="pagefoot">Navon v2028 · <span class="g">Boxed Retail Edition</span> · fold along dotted line — no glue required</p>
+
+</div>
+</body>
+</html>

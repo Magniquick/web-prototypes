@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>libnavon / rev 2028 — Datasheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @font-face{
+    font-family:"DSEG7";
+    src:url("fonts/DSEG7Classic-Regular.woff2") format("woff2");
+    font-display:swap;
+  }
+
+  :root{
+    --paper: oklch(97% 0.004 90);
+    --paper-2: oklch(95% 0.005 90);
+    --ink: oklch(21% 0.01 260);
+    --ink-2: oklch(38% 0.008 260);
+    --ink-3: oklch(55% 0.006 260);
+    --rule: oklch(78% 0.006 260);
+    --rule-2: oklch(86% 0.005 260);
+    --accent: oklch(82% 0.14 80);      /* amber */
+    --accent-ink: oklch(56% 0.12 78);  /* darker amber for text on paper */
+    --grot:"Space Grotesk", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      /* faint grid dots for "printed engineering paper" */
+      radial-gradient(oklch(80% 0.006 260 / .5) .6px, transparent .7px);
+    background-size:22px 22px;
+    background-color:var(--paper);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:14px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:0;
+  }
+  a{color:var(--ink); text-decoration:none; border-bottom:1px solid var(--accent-ink)}
+  a:hover{color:var(--accent-ink)}
+  ::selection{background:var(--accent); color:var(--ink)}
+
+  .sheet{
+    max-width:1080px; margin:0 auto; background:var(--paper);
+    border-left:1px solid var(--rule); border-right:1px solid var(--rule);
+    box-shadow:0 0 0 1px oklch(90% 0.005 260 / .6), 0 24px 60px -30px oklch(30% 0.02 260 / .35);
+  }
+
+  /* ---------- entrance ---------- */
+  .fade{opacity:0; transform:translateY(8px); animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+  .fade:nth-child(2){animation-delay:.05s}
+  .fade:nth-child(3){animation-delay:.1s}
+  @keyframes rise{to{opacity:1; transform:none}}
+  @media (prefers-reduced-motion: reduce){
+    .fade{opacity:1; transform:none; animation:none}
+  }
+
+  /* ---------- utility ---------- */
+  .mono{font-family:var(--mono)}
+  .label{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-3);
+  }
+  .accent-chip{
+    display:inline-block; background:var(--accent); color:var(--ink);
+    font-family:var(--mono); font-weight:600; font-size:10.5px; letter-spacing:.12em;
+    padding:2px 7px; text-transform:uppercase;
+  }
+  .figno{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-3);
+  }
+  .kw{color:var(--accent-ink)}
+
+  /* section header bar */
+  .sec-head{
+    display:flex; align-items:center; gap:12px;
+    border-top:2px solid var(--ink); border-bottom:1px solid var(--ink);
+    padding:6px 24px; margin:0;
+  }
+  .sec-head .n{
+    font-family:var(--mono); font-weight:600; font-size:12px; letter-spacing:.05em;
+    background:var(--ink); color:var(--paper); padding:2px 7px;
+  }
+  .sec-head h2{
+    font-family:var(--grot); font-weight:700; font-size:15px; letter-spacing:.03em;
+    text-transform:uppercase; margin:0;
+  }
+  .sec-head .r{margin-left:auto}
+  .pad{padding:22px 24px}
+
+  /* ============ HEADER BLOCK ============ */
+  header{padding:26px 24px 22px; border-bottom:2px solid var(--ink)}
+  .brandrow{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap}
+  .partno{
+    font-family:var(--grot); font-weight:700; font-size:clamp(34px,6vw,60px);
+    line-height:.92; letter-spacing:-.01em; margin:0;
+  }
+  .partno .rev{color:var(--ink-3); font-weight:500}
+  .incl{
+    font-family:var(--mono); font-size:clamp(13px,2vw,17px); letter-spacing:.01em;
+    margin:2px 0 0; color:var(--ink-2);
+  }
+  .incl .kw{color:var(--accent-ink)}
+  .incl .str{color:var(--ink)}
+  .subline{
+    font-family:var(--grot); font-weight:500; font-size:clamp(13px,2.2vw,19px);
+    letter-spacing:.06em; margin:8px 0 0; color:var(--ink-2); text-transform:uppercase;
+  }
+  .subline .dot{color:var(--accent-ink)}
+  .stamp{
+    text-align:right; flex:0 0 auto; border:1px solid var(--rule); padding:8px 12px;
+    min-width:150px; background:var(--paper-2);
+  }
+  .stamp .big{font-family:"DSEG7", var(--mono); font-size:22px; letter-spacing:.02em; color:var(--ink)}
+  .stamp .sm{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:4px}
+
+  /* header two-col: features + description */
+  .hgrid{display:grid; grid-template-columns:1fr 1.25fr; gap:0; margin-top:22px; border:1px solid var(--rule)}
+  .hgrid > div{padding:16px 18px}
+  .hgrid .feat{border-right:1px solid var(--rule)}
+  .hgrid h3{
+    font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-3); margin:0 0 10px; font-weight:600;
+  }
+  ul.features{list-style:none; margin:0; padding:0}
+  ul.features li{
+    position:relative; padding:3px 0 3px 20px; font-size:13px; color:var(--ink);
+    border-bottom:1px dotted var(--rule-2);
+  }
+  ul.features li:last-child{border-bottom:0}
+  ul.features li::before{
+    content:"▪"; position:absolute; left:2px; top:3px; color:var(--accent-ink); font-size:11px;
+  }
+  .desc p{margin:0 0 10px; font-size:13px; line-height:1.6; color:var(--ink-2)}
+  .desc p:last-child{margin-bottom:0}
+  .desc strong{color:var(--ink); font-weight:600}
+  @media (max-width:720px){
+    .hgrid{grid-template-columns:1fr}
+    .hgrid .feat{border-right:0; border-bottom:1px solid var(--rule)}
+  }
+
+  /* ============ BLOCK DIAGRAM ============ */
+  .diagram-wrap{width:100%; overflow-x:auto}
+  svg.blockdiagram{display:block; width:100%; height:auto; min-width:560px}
+  svg text{font-family:var(--mono)}
+  .cap{font-size:11px; color:var(--ink-3); margin-top:12px; text-align:center}
+  .cap b{color:var(--ink-2); font-weight:600}
+  .sig{
+    font-family:var(--mono); font-size:12.5px; text-align:center; color:var(--ink-2);
+    margin:0 0 14px; padding:8px 10px; border:1px dashed var(--rule); background:var(--paper-2);
+  }
+  .sig .kw{color:var(--accent-ink)}
+  .sig .fn{color:var(--ink); font-weight:600}
+
+  /* ============ TABLES ============ */
+  .tbl-scroll{width:100%; overflow-x:auto}
+  table{border-collapse:collapse; width:100%; font-family:var(--mono); font-size:12.5px; min-width:560px}
+  caption{
+    caption-side:top; text-align:left; font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-3); padding:0 0 10px; font-weight:600;
+  }
+  caption b{color:var(--ink)}
+  thead th{
+    text-align:left; font-weight:600; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--paper); background:var(--ink); padding:7px 10px; white-space:nowrap;
+  }
+  tbody td, tbody th{
+    padding:8px 10px; border-bottom:1px solid var(--rule-2); vertical-align:top; text-align:left;
+    font-weight:400;
+  }
+  tbody tr:nth-child(even){background:var(--paper-2)}
+  td.num, th.num{text-align:right; font-variant-numeric:tabular-nums}
+  td.sym{color:var(--accent-ink); font-weight:500}
+  td.p{color:var(--ink)}
+  .typ{font-weight:600}
+  .unit{color:var(--ink-3)}
+  td.fn{color:var(--ink); white-space:nowrap}
+  td.fn .kw{color:var(--accent-ink)}
+
+  /* two-column functional table region */
+  .cols2{display:grid; grid-template-columns:1fr 1fr; gap:0}
+  .cols2 > div{padding:22px 24px; min-width:0}
+  .cols2 > div:first-child{border-right:1px solid var(--rule)}
+  @media (max-width:820px){
+    .cols2{grid-template-columns:1fr}
+    .cols2 > div:first-child{border-right:0; border-bottom:1px solid var(--rule)}
+  }
+
+  /* functional block table (Parameter | value) */
+  table.fn td{border-bottom:1px solid var(--rule-2)}
+  table.fn td:first-child{color:var(--ink); width:45%}
+  table.fn td:last-child{color:var(--ink-2); text-align:right; white-space:nowrap}
+  table.fn td.full:first-child{width:auto}
+  table.fn .full{color:var(--ink); text-align:left; white-space:normal}
+  table.fn{min-width:340px}
+  .starval{color:var(--accent-ink); font-weight:600; white-space:nowrap}
+  .note{font-size:11px; color:var(--ink-3); margin:8px 0 0; line-height:1.5}
+
+  /* ordering info rows */
+  .order td:first-child{font-weight:500}
+
+  /* skills grid */
+  .skills{display:grid; grid-template-columns:auto 1fr; gap:6px 16px; font-size:12.5px}
+  .skills .k{color:var(--ink-3); text-transform:uppercase; font-size:10.5px; letter-spacing:.1em; padding-top:2px}
+  .skills .v{color:var(--ink)}
+
+  /* ============ FOOTER ============ */
+  footer{border-top:2px solid var(--ink)}
+  .revhist{padding:18px 24px; border-bottom:1px solid var(--rule)}
+  .foot-b{display:grid; grid-template-columns:1.2fr 1fr; gap:0}
+  .foot-b > div{padding:18px 24px}
+  .foot-b .contact{border-right:1px solid var(--rule)}
+  .contact-rows{display:flex; flex-direction:column; gap:6px; font-size:13px}
+  .contact-rows a{display:inline-flex; align-items:center; gap:8px; border-bottom:0}
+  .contact-rows a:hover span{border-bottom:1px solid var(--accent-ink)}
+  .contact-rows svg{width:15px; height:15px; fill:var(--ink-2); flex:0 0 auto}
+  .colophon{font-size:11px; color:var(--ink-3); line-height:1.6}
+  .colophon .accent-chip{margin-bottom:8px}
+  @media (max-width:720px){
+    .foot-b{grid-template-columns:1fr}
+    .foot-b .contact{border-right:0; border-bottom:1px solid var(--rule)}
+  }
+
+  /* topbar meta strip */
+  .topstrip{
+    display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    padding:6px 24px; border-bottom:1px solid var(--rule);
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3);
+  }
+  .topstrip .accent-t{color:var(--accent-ink)}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- meta strip -->
+  <div class="topstrip">
+    <span>Man Page <span class="accent-t">LIBNAVON(3)</span></span>
+    <span>Preliminary · ABI unstable · subject to revision</span>
+    <span>Page 1 / 1</span>
+  </div>
+
+  <!-- ============ HEADER BLOCK ============ -->
+  <header class="fade">
+    <div class="brandrow">
+      <div>
+        <h1 class="partno">NAVON&#8209;JL <span class="rev">/ libnavon</span></h1>
+        <p class="incl"><span class="kw">#include</span> &lt;<span class="str">navon.h</span>&gt; &nbsp;<span style="color:var(--ink-3)">// -lnavon · rev 2028</span></p>
+        <p class="subline">Systems <span class="dot">·</span> Security <span class="dot">·</span> Machine Learning</p>
+      </div>
+      <div class="stamp" aria-label="version readout">
+        <div class="big">2.028</div>
+        <div class="sm">abi v6.12 · mainline</div>
+      </div>
+    </div>
+
+    <div class="hgrid">
+      <div class="feat">
+        <h3>Features</h3>
+        <ul class="features">
+          <li>Upstream Linux kernel contributor — mainline + stable</li>
+          <li>Head of CTF team &ldquo;PlayingG0d&rdquo;</li>
+          <li>National #1 · international top-10 finishes</li>
+          <li>RL research — Kuhn Poker via Double DQN</li>
+          <li>Runs on entry-level hardware (MX250-class)</li>
+          <li>Low footprint: 3 MB / forward pass</li>
+          <li>Zero-day disclosure &amp; responsible patching</li>
+          <li>Open-source maintainer (108★ flagship)</li>
+        </ul>
+      </div>
+      <div class="desc">
+        <h3>Description</h3>
+        <p>
+          <strong>libnavon</strong> exposes a 2nd-year B.Tech Computer Science student at
+          Manipal and Linux kernel contributor (mainline + stable) as a linkable
+          systems library. The header declares three subsystems —
+          <span class="mono">kernel</span>, <span class="mono">security</span>, and
+          <span class="mono">ml</span> — behind a single stable entry point.
+        </p>
+        <p>
+          Head of a CTF team with a national #1 and international top-10 finishes. The
+          call graph spans vulnerability research through to reinforcement learning:
+          from crawling leaked keys across GitHub to teaching a network to play poker
+          on a laptop GPU. Thread-safe under exam-season load (best effort).
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ 1 · TYPE SIGNATURE & STRUCT LAYOUT ============ -->
+  <div class="sec-head fade">
+    <span class="n">1</span>
+    <h2>Type Signature &amp; Struct Layout</h2>
+    <span class="figno r">Fig. 1</span>
+  </div>
+  <div class="pad">
+    <p class="sig"><span class="kw">navon::</span><span class="fn">solve</span>(problem_t <span class="kw">*</span>p) <span class="kw">-&gt;</span> solution_t <span style="color:var(--ink-3)">// noexcept(false), blocks on ☕</span></p>
+    <div class="diagram-wrap">
+      <svg class="blockdiagram" viewBox="0 0 760 356" role="img" aria-label="Memory layout of struct navon showing four fields — kernel, security, ml and open_source — with byte offsets and sizes.">
+        <defs>
+          <marker id="tick" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M5 0 L5 10" stroke="oklch(38% 0.008 260)" stroke-width="1.4"/>
+          </marker>
+        </defs>
+
+        <!-- title line -->
+        <text x="40" y="26" fill="oklch(21% 0.01 260)" font-size="13" font-weight="600">struct <tspan fill="oklch(56% 0.12 78)">navon</tspan> {</text>
+        <text x="700" y="26" text-anchor="end" fill="oklch(55% 0.006 260)" font-size="11">sizeof = 0x30 (48 B)</text>
+
+        <!-- offset ruler header -->
+        <text x="60" y="52" fill="oklch(55% 0.006 260)" font-size="9.5" letter-spacing="1">OFFSET</text>
+        <text x="182" y="52" fill="oklch(55% 0.006 260)" font-size="9.5" letter-spacing="1">FIELD</text>
+        <text x="620" y="52" fill="oklch(55% 0.006 260)" font-size="9.5" letter-spacing="1">SIZE / TYPE</text>
+        <line x1="40" y1="60" x2="720" y2="60" stroke="oklch(78% 0.006 260)" stroke-width="1"/>
+
+        <!-- FIELD 0: kernel -->
+        <rect x="140" y="70" width="460" height="46" fill="oklch(95% 0.005 90)" stroke="oklch(78% 0.006 260)"/>
+        <rect x="140" y="70" width="6" height="46" fill="oklch(56% 0.12 78)"/>
+        <text x="60" y="98" fill="oklch(38% 0.008 260)" font-size="12" font-weight="600">0x00</text>
+        <text x="160" y="90" fill="oklch(21% 0.01 260)" font-size="12.5" font-weight="600">kernel</text>
+        <text x="160" y="108" fill="oklch(38% 0.008 260)" font-size="10.5">mainline patches · ALSA · v6.12 / v5.10</text>
+        <text x="700" y="90" text-anchor="end" fill="oklch(56% 0.12 78)" font-size="10.5" font-weight="600">patch_t[]</text>
+        <text x="700" y="106" text-anchor="end" fill="oklch(55% 0.006 260)" font-size="10">16 B</text>
+
+        <!-- FIELD 1: security -->
+        <rect x="140" y="122" width="460" height="46" fill="oklch(97% 0.004 90)" stroke="oklch(78% 0.006 260)"/>
+        <rect x="140" y="122" width="6" height="46" fill="oklch(56% 0.12 78)"/>
+        <text x="60" y="150" fill="oklch(38% 0.008 260)" font-size="12" font-weight="600">0x10</text>
+        <text x="160" y="142" fill="oklch(21% 0.01 260)" font-size="12.5" font-weight="600">security</text>
+        <text x="160" y="160" fill="oklch(38% 0.008 260)" font-size="10.5">CTF · disclosure · exploit dev</text>
+        <text x="700" y="142" text-anchor="end" fill="oklch(56% 0.12 78)" font-size="10.5" font-weight="600">ctf_ctx_t</text>
+        <text x="700" y="158" text-anchor="end" fill="oklch(55% 0.006 260)" font-size="10">8 B</text>
+
+        <!-- FIELD 2: ml -->
+        <rect x="140" y="174" width="460" height="46" fill="oklch(95% 0.005 90)" stroke="oklch(78% 0.006 260)"/>
+        <rect x="140" y="174" width="6" height="46" fill="oklch(56% 0.12 78)"/>
+        <text x="60" y="202" fill="oklch(38% 0.008 260)" font-size="12" font-weight="600">0x18</text>
+        <text x="160" y="194" fill="oklch(21% 0.01 260)" font-size="12.5" font-weight="600">ml</text>
+        <text x="160" y="212" fill="oklch(38% 0.008 260)" font-size="10.5">Double DQN · Kuhn Poker · 3 MB/pass</text>
+        <text x="700" y="194" text-anchor="end" fill="oklch(56% 0.12 78)" font-size="10.5" font-weight="600">policy_t *</text>
+        <text x="700" y="210" text-anchor="end" fill="oklch(55% 0.006 260)" font-size="10">8 B</text>
+
+        <!-- FIELD 3: open_source -->
+        <rect x="140" y="226" width="460" height="46" fill="oklch(97% 0.004 90)" stroke="oklch(78% 0.006 260)"/>
+        <rect x="140" y="226" width="6" height="46" fill="oklch(56% 0.12 78)"/>
+        <text x="60" y="254" fill="oklch(38% 0.008 260)" font-size="12" font-weight="600">0x20</text>
+        <text x="160" y="246" fill="oklch(21% 0.01 260)" font-size="12.5" font-weight="600">open_source</text>
+        <text x="160" y="264" fill="oklch(38% 0.008 260)" font-size="10.5">repos · maintainer · ★ counts</text>
+        <text x="700" y="246" text-anchor="end" fill="oklch(56% 0.12 78)" font-size="10.5" font-weight="600">repo_t[N]</text>
+        <text x="700" y="262" text-anchor="end" fill="oklch(55% 0.006 260)" font-size="10">8 B</text>
+
+        <!-- padding / closing brace -->
+        <text x="60" y="298" fill="oklch(55% 0.006 260)" font-size="10.5">0x28</text>
+        <text x="160" y="298" fill="oklch(55% 0.006 260)" font-size="10.5">_pad[8]  /* reserved — future subsystems */</text>
+        <text x="40" y="332" fill="oklch(21% 0.01 260)" font-size="13" font-weight="600">};</text>
+        <text x="700" y="332" text-anchor="end" fill="oklch(55% 0.006 260)" font-size="10.5">__attribute__((packed))</text>
+      </svg>
+    </div>
+    <p class="cap"><b>Fig. 1</b> — Memory layout of <span class="mono">struct navon</span>. Fields aligned on 8-byte boundaries; <span class="mono">_pad</span> reserved for ABI growth. Allocated on the caffeine heap.</p>
+  </div>
+
+  <!-- ============ 2 · COMPLEXITY & PERFORMANCE ============ -->
+  <div class="sec-head fade">
+    <span class="n">2</span>
+    <h2>Complexity &amp; Performance Characteristics</h2>
+    <span class="figno r">Table 1</span>
+  </div>
+  <div class="pad">
+    <div class="tbl-scroll">
+      <table>
+        <caption><b>Table 1.</b> &nbsp;Benchmarks @ -O2, entry-level host (MX250 / 8 GB)</caption>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Symbol</th>
+            <th class="num">Min / Best</th>
+            <th class="num">Typ</th>
+            <th class="num">Max / Worst</th>
+            <th>Unit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="p">Kuhn-poker convergence (wall time)</td>
+            <td class="sym">t<sub>CONV</sub></td>
+            <td class="num">1.0</td>
+            <td class="num typ">1.5</td>
+            <td class="num">2.0</td>
+            <td class="unit">h</td>
+          </tr>
+          <tr>
+            <td class="p">Model footprint / forward pass</td>
+            <td class="sym">M<sub>FWD</sub></td>
+            <td class="num">—</td>
+            <td class="num typ">3</td>
+            <td class="num">3</td>
+            <td class="unit">MB</td>
+          </tr>
+          <tr>
+            <td class="p">Compute device (accelerator)</td>
+            <td class="sym">DEV<sub>GPU</sub></td>
+            <td class="num">MX250</td>
+            <td class="num typ">MX250</td>
+            <td class="num">MX250</td>
+            <td class="unit">—</td>
+          </tr>
+          <tr>
+            <td class="p">CTF placement rank</td>
+            <td class="sym">R<sub>CTF</sub></td>
+            <td class="num">#1</td>
+            <td class="num typ">#1</td>
+            <td class="num">#8</td>
+            <td class="unit">rank</td>
+          </tr>
+          <tr>
+            <td class="p">Kernel ABI version supported</td>
+            <td class="sym">V<sub>KRNL</sub></td>
+            <td class="num">5.10</td>
+            <td class="num typ">6.12</td>
+            <td class="num">6.12</td>
+            <td class="unit">rev</td>
+          </tr>
+          <tr>
+            <td class="p">Keybox crawl — GitHub search space</td>
+            <td class="sym">O(crawl)</td>
+            <td class="num">O(1)*</td>
+            <td class="num typ">O(n)</td>
+            <td class="num">O(n log n)</td>
+            <td class="unit">time</td>
+          </tr>
+          <tr>
+            <td class="p">Records recovered (single disclosure)</td>
+            <td class="sym">N<sub>REC</sub></td>
+            <td class="num">1k</td>
+            <td class="num typ">—</td>
+            <td class="num">21k</td>
+            <td class="unit">rows</td>
+          </tr>
+          <tr>
+            <td class="p">Exploit → responsible disclosure</td>
+            <td class="sym">t<sub>DISC</sub></td>
+            <td class="num">O(1)</td>
+            <td class="num typ">—</td>
+            <td class="num">O(patch)</td>
+            <td class="unit">days</td>
+          </tr>
+          <tr>
+            <td class="p">Flagship repo star rating</td>
+            <td class="sym">★<sub>MAX</sub></td>
+            <td class="num">12</td>
+            <td class="num typ">—</td>
+            <td class="num">108</td>
+            <td class="unit">★</td>
+          </tr>
+          <tr>
+            <td class="p">Support window (uptime)</td>
+            <td class="sym">t<sub>UP</sub></td>
+            <td class="num">2</td>
+            <td class="num typ">2</td>
+            <td class="num">4</td>
+            <td class="unit">yr</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Note 1: Convergence to Nash-equilibrium-like strategies verified on a single MX250 GPU; betting probabilities closely approximate theoretical Nash equilibria. *Cached pagination amortises repeated crawls toward O(1). Behaviour undefined under exam-season deadlines — do not exceed absolute maximum ratings.</p>
+  </div>
+
+  <!-- ============ 3 · API / SYSCALL REFERENCE ============ -->
+  <div class="sec-head fade">
+    <span class="n">3</span>
+    <h2>API / Syscall Reference</h2>
+    <span class="figno r">Table 2</span>
+  </div>
+  <div class="pad">
+    <div class="tbl-scroll">
+      <table>
+        <caption><b>Table 2.</b> &nbsp;Exported symbols — <span class="mono">nm -D libnavon.so</span></caption>
+        <thead>
+          <tr>
+            <th>Signature</th>
+            <th>Synopsis</th>
+            <th>Ref</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fn"><span class="kw">int</span> kernel_contribute(patch_t)</td>
+            <td>ALSA: hda/realtek mute-LED quirk for HP Pavilion x360 14-dy1xxx (ALC295); merged v6.12 mainline + v5.10 stable.</td>
+            <td><a href="https://github.com/torvalds/linux/commit/b11a74ac4f545626d0dc95a8ca8c41df90532bf3"><span class="mono">b11a74ac ↗</span></a></td>
+          </tr>
+          <tr>
+            <td class="fn"><span class="kw">int</span> disclose_vuln(target_t)</td>
+            <td>Responsible-disclosure path. MIT Manipal SLcM (21k+ records); webbites.io (~1k private bookmarks). Returns 0 once patched.</td>
+            <td>private</td>
+          </tr>
+          <tr>
+            <td class="fn">flag_t ctf_play(chall_t)</td>
+            <td>Team &ldquo;PlayingG0d&rdquo;. NiteCTF #8/#8 intl, Citadel #1 (₹7.5k). Also authors challenges (crypto / stego).</td>
+            <td>§3.5</td>
+          </tr>
+          <tr>
+            <td class="fn">policy_t rl_train(env_t)</td>
+            <td>Double DQN over Kuhn Poker; converges to Nash-like play in 1–2 h. First working Gymnasium env for the game.</td>
+            <td><a href="https://github.com/Magniquick/gym-kuhn-poker">gym ↗</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols2" style="padding:0; margin-top:24px; border-top:1px solid var(--rule)">
+      <!-- LEFT column -->
+      <div>
+        <div class="tbl-scroll" style="margin-bottom:24px">
+          <table class="fn">
+            <caption><b>3.4</b> &nbsp;disclose_vuln() — call log</caption>
+            <tbody>
+              <tr><td>MIT Manipal SLcM</td><td>21k+ records</td></tr>
+              <tr><td>webbites.io</td><td>~1k bookmarks</td></tr>
+              <tr><td class="full" style="color:var(--ink-3); font-size:11px">All privately reported &amp; since patched. errno cleared.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tbl-scroll">
+          <table class="fn">
+            <caption><b>3.5</b> &nbsp;ctf_play() — return values</caption>
+            <tbody>
+              <tr><td>NiteCTF 2024</td><td><span class="starval">#8</span> intl</td></tr>
+              <tr><td>Citadel CTF 2025</td><td><span class="starval">#1</span> · ₹7.5k</td></tr>
+              <tr><td>NiteCTF 2025</td><td><span class="starval">#8</span> intl</td></tr>
+              <tr><td>OMZ Discord</td><td>moderator</td></tr>
+              <tr><td class="full" style="color:var(--ink-3); font-size:11px">Challenge author @ Indomitus CTF (MIST): LLM Token-Shift Cipher, Polynomial-Gate Encoding.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIGHT column -->
+      <div>
+        <div class="tbl-scroll" style="margin-bottom:24px">
+          <table class="fn">
+            <caption><b>3.6</b> &nbsp;rl_train() — env_t = Kuhn Poker</caption>
+            <tbody>
+              <tr><td class="full">IIM Kozhikode · Prof. M. Shahid Abdulla</td></tr>
+              <tr><td class="full" style="color:var(--ink-2)">Solving Kuhn Poker with Double DQN — efficient RL on consumer-grade hardware.</td></tr>
+              <tr><td>Method</td><td>Double DQN ≈ CFR</td></tr>
+              <tr><td>Gym env</td><td><a href="https://github.com/Magniquick/gym-kuhn-poker">gym-kuhn-poker</a></td></tr>
+              <tr><td>Convergence</td><td>Nash-like, 1–2 h</td></tr>
+              <tr><td>Paper</td><td><a href="https://typst.app/project/rSMWAKD03peYDTGXp4Mzjr">typst.app ↗</a></td></tr>
+              <tr><td>Project</td><td><a href="https://github.com/Magniquick/reinforcement-learning">repo ↗</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tbl-scroll">
+          <table class="fn">
+            <caption><b>3.7</b> &nbsp;upstream_pr() — accepted patches</caption>
+            <tbody>
+              <tr><td><a href="https://github.com/System64fumo/syshud/pull/37">syshud #37</a></td><td>kbd + backlight</td></tr>
+              <tr><td><a href="https://github.com/vicinaehq/extensions/pull/66">vicinae #66</a></td><td>swww fallback</td></tr>
+              <tr><td><a href="https://github.com/RayBytes/ChatMock/pull/72">ChatMock #72</a></td><td>app compat</td></tr>
+              <tr><td><a href="https://github.com/TrueMyst/BeatPrints/pull/1">BeatPrints #1</a> · <a href="https://github.com/TrueMyst/BeatPrints/pull/2">#2</a></td><td>cross-dir + err</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4 · DEPENDENCIES & BUILD ============ -->
+  <div class="sec-head fade">
+    <span class="n">4</span>
+    <h2>Dependencies &amp; Build</h2>
+    <span class="figno r">Table 3</span>
+  </div>
+  <div class="pad">
+    <div class="tbl-scroll" style="margin-bottom:22px">
+      <table class="fn" style="min-width:560px">
+        <caption><b>4.1</b> &nbsp;requires: &nbsp;<span style="color:var(--ink-3); text-transform:none; letter-spacing:0">// build prerequisites, resolved</span></caption>
+        <tbody>
+          <tr><td>education >= manipal</td><td>B.Tech CS · 2024–2028</td></tr>
+          <tr><td>education >= iitm</td><td>BS Data Sci (online) · diploma done</td></tr>
+          <tr><td>toolchain</td><td>git · qemu · docker · gh-actions</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-scroll">
+      <table class="order">
+        <caption><b>Table 3.</b> &nbsp;install: &nbsp;open-source packages — available on the index</caption>
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th class="num">★</th>
+            <th>Provides</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://github.com/Magniquick/KeyCrawler">KeyCrawler</a></td>
+            <td class="num"><span class="starval">★ 108</span></td>
+            <td>Crawls leaked Android keybox.xml keys across GitHub — validate, dedup, prune, cached pagination</td>
+            <td><a href="https://github.com/Magniquick/KeyCrawler">GitHub ↗</a></td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/Magniquick/atuin-win">atuin-win</a></td>
+            <td class="num"><span class="starval">★ 12</span></td>
+            <td>Windows builds for Atuin shell-history sync · msys2 UCRT64 + GH Actions</td>
+            <td><a href="https://github.com/Magniquick/atuin-win">GitHub ↗</a></td>
+          </tr>
+          <tr>
+            <td>ml-iit</td>
+            <td class="num unit">—</td>
+            <td>XLM-RoBERTa fake-news detection for Dravidian languages (IITM AI-ML)</td>
+            <td>internal</td>
+          </tr>
+          <tr>
+            <td>font-arena</td>
+            <td class="num unit">—</td>
+            <td>React 19 + TS + Vite font tournament · dynamic Google Fonts preview</td>
+            <td>internal</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Note 2: <span class="mono">$ cc -std=c23 main.c -lnavon</span> — links against mainline. Transitive deps (☕, sleep) intentionally under-provisioned; segfaults reported responsibly upstream.</p>
+  </div>
+
+  <!-- ============ 5 · RESOURCE LIMITS ============ -->
+  <div class="sec-head fade">
+    <span class="n">5</span>
+    <h2>Resource Limits &amp; Capabilities</h2>
+    <span class="figno r">Table 4</span>
+  </div>
+  <div class="pad">
+    <p class="note" style="margin:0 0 14px; color:var(--ink-2)"><span class="mono">getrlimit(RLIMIT_SKILL, &amp;rl)</span> — soft/hard caps enforced by the scheduler:</p>
+    <div class="skills">
+      <div class="k">CAP_LANG</div>
+      <div class="v">Python (PyTorch · requests · httpx) · Java · C · bash / zsh</div>
+      <div class="k">CAP_TOOL</div>
+      <div class="v">Git · Linux · Shell · QEMU · Burp Suite · IDA</div>
+      <div class="k">CAP_SYS</div>
+      <div class="v">Linux Kernel Build System · GitHub Actions CI/CD · Docker</div>
+    </div>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <div class="revhist">
+      <div class="tbl-scroll">
+        <table>
+          <caption><b>Revision History</b> &nbsp;<span style="color:var(--ink-3); text-transform:none; letter-spacing:0">// git log --oneline</span></caption>
+          <thead>
+            <tr><th>Rev</th><th>Date</th><th>Commit</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>A</td><td>2024</td><td>init — enrolled at Manipal Institute of Technology</td></tr>
+            <tr><td>B</td><td>Apr 2025</td><td>feat(kernel): first patch merged (v6.12 mainline + v5.10 stable)</td></tr>
+            <tr><td>C</td><td>2025</td><td>research(rl): Double DQN @ IIM Kozhikode; win: Citadel CTF #1</td></tr>
+            <tr><td class="typ">D</td><td class="typ">2028</td><td class="typ">release(1.0): B.Tech CS complete — end of support window [projected]</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="foot-b">
+      <div class="contact">
+        <p class="label" style="margin:0 0 12px">Maintainer / Bug Reports</p>
+        <div class="contact-rows">
+          <a href="https://github.com/Magniquick" rel="me">
+            <svg viewBox="0 0 24 24"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.32.47-2.39 1.24-3.23-.13-.3-.54-1.53.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.23 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58C20.57 22.29 24 17.8 24 12.5 24 5.87 18.63.5 12 .5z"/></svg>
+            <span>github.com/Magniquick</span>
+          </a>
+          <a href="mailto:navonjohnlukose@gmail.com">
+            <svg viewBox="0 0 24 24"><path d="M2 4h20v16H2V4zm2 2v.5l8 5 8-5V6H4zm16 3-8 5-8-5v9h16V9z"/></svg>
+            <span>navonjohnlukose@gmail.com</span>
+          </a>
+          <a href="tel:+917907925646">
+            <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.3 2.2z"/></svg>
+            <span>+91 79079 25646</span>
+          </a>
+        </div>
+      </div>
+      <div>
+        <span class="accent-chip">Preliminary</span>
+        <p class="colophon">
+          libnavon · rev 2028 · <span class="mono">LIBNAVON(3)</span>.
+          Behaviour is tongue-in-cheek but semantically honest and subject to change
+          without notice as the library continues to evolve. No warranty; not fit for
+          safety-critical poker. Contains no AI slop (mostly).
+          <br><br>
+          Compiled with <span class="mono">clang</span> · typeset in IBM Plex Mono &amp; Space Grotesk · licensed <span class="mono">MIT-0</span>.
+          © 2026 Navon John Lukose — Manipal, IN.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

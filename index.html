@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>navon — wip prototypes</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:oklch(13% 0 0); --s:oklch(17% 0 0); --line:oklch(30% 0 0);
+    --t1:oklch(93% 0 0); --t2:oklch(72% 0 0); --t3:oklch(52% 0 0); --acc:oklch(80% 0.11 210);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; min-height:100vh; background:var(--bg); color:var(--t1);
+    font-family:"IBM Plex Mono",ui-monospace,monospace; -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; align-items:center; padding:56px 18px 70px}
+  h1{font-family:"VT323",monospace; font-size:clamp(40px,8vw,68px); margin:0; letter-spacing:1px}
+  h1 .c{color:var(--acc); animation:bl 1.05s steps(1) infinite}
+  @keyframes bl{50%{opacity:0}}
+  .sub{color:var(--t3); font-size:13px; margin:6px 0 4px; text-align:center}
+  .note{color:var(--t3); font-size:12px; margin-bottom:34px; max-width:520px; text-align:center; line-height:1.6}
+  .group{width:100%; max-width:760px; margin-bottom:26px}
+  .glabel{color:var(--t3); font-size:12px; text-transform:uppercase; letter-spacing:2px; margin:0 0 10px 2px}
+  .cards{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  @media (max-width:560px){ .cards{grid-template-columns:1fr} }
+  a.card{display:block; text-decoration:none; color:inherit; border:1px solid var(--line);
+    border-radius:7px; padding:16px 16px 15px; background:var(--s); transition:.16s}
+  a.card:hover{border-color:var(--acc); transform:translateY(-2px)}
+  .card .n{font-size:16px; color:var(--t1)}
+  .card .n b{color:var(--acc); font-weight:400; font-family:"VT323",monospace; font-size:18px; margin-right:7px}
+  .card .d{color:var(--t2); font-size:12.5px; margin-top:6px; line-height:1.55}
+  footer{color:var(--t3); font-size:12px; margin-top:8px; text-align:center}
+</style>
+</head>
+<body>
+  <h1>~/navon<span class="c">_</span></h1>
+  <div class="sub">personal-site prototypes · work in progress</div>
+  <div class="note">early drafts i'm messing with — not final, content is placeholder-ish. pick a favourite ↓</div>
+
+  <div class="group">
+    <div class="glabel">the parents</div>
+    <div class="cards">
+      <a class="card" href="bento.html">
+        <div class="n"><b>A</b>bento / terminal</div>
+        <div class="d">window-pane dashboard, monospace + CRT flavour.</div>
+      </a>
+      <a class="card" href="datasheet.html">
+        <div class="n"><b>B</b>datasheet (cs)</div>
+        <div class="d">me as a C-header spec sheet — struct layout, API, complexity tables.</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="glabel">the children — datasheet × bento</div>
+    <div class="cards">
+      <a class="card" href="hybrid-light.html">
+        <div class="n"><b>C</b>hybrid · light</div>
+        <div class="d">datasheet system, re-laid as a bento of spec panels. paper.</div>
+      </a>
+      <a class="card" href="hybrid-dark.html">
+        <div class="n"><b>D</b>hybrid · dark</div>
+        <div class="d">dark terminal windows, datasheet guts. amber / cyan toggle.</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="glabel">bonus</div>
+    <div class="cards">
+      <a class="card" href="box.html">
+        <div class="n"><b>E</b>retail box</div>
+        <div class="d">me as a boxed product — front hero + nutrition-facts spec back, barcode.</div>
+      </a>
+    </div>
+  </div>
+
+  <footer>navon john lukose · github.com/Magniquick</footer>
+</body>
+</html>

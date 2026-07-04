@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>navon — datasheet × bento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---- fonts: VT323 = Google Fonts · IBM Plex Mono = Google Fonts · DSEG7 = keshikan.net/fonts ---- */
+  @font-face{
+    font-family:"DSEG7";
+    src:url("fonts/DSEG7Classic-Regular.woff2") format("woff2");
+    font-display:swap;
+  }
+
+  /* ---- palette: ghostk dark, single re-skinnable accent (OKLCH) ---- */
+  :root{
+    --bg:      oklch(13% 0 0);
+    --bg-2:    oklch(16% 0 0);
+    --bg-3:    oklch(19% 0 0);
+    --txt:     oklch(93% 0 0);
+    --txt-2:   oklch(78% 0 0);
+    --muted:   oklch(56% 0 0);
+    --faint:   oklch(44% 0 0);
+    --line:    oklch(30% 0 0);
+    --line-2:  oklch(24% 0 0);
+    /* AMBER default — deuteranopia-safe; toggles to cyan via [data-accent] */
+    --accent:  oklch(82% 0.14 80);
+    --accent-2:oklch(70% 0.13 78);
+    --seg-ghost: color-mix(in oklch, var(--txt) 10%, transparent);
+    --mono:"IBM Plex Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+    --term:"VT323", ui-monospace, monospace;
+    --seg:"DSEG7","VT323", monospace;
+  }
+  html[data-accent="cyan"]{
+    --accent:  oklch(80% 0.11 210);
+    --accent-2:oklch(68% 0.11 212);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--txt);
+    font-family:var(--mono); font-size:14px; line-height:1.62;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    padding:0 14px 60px;
+  }
+  a{color:inherit; text-decoration:none}
+  a.link{color:var(--txt); border-bottom:1px solid var(--faint); transition:.15s}
+  a.link:hover{color:var(--accent); border-bottom-color:var(--accent)}
+  ::selection{background:var(--accent); color:var(--bg)}
+
+  /* ---- CRT scanline overlay (LOW opacity, ~.12) ---- */
+  html::before{
+    content:""; position:fixed; inset:0; z-index:2000; pointer-events:none; opacity:.12;
+    background-image:repeating-linear-gradient(to bottom,
+      transparent 0 2px, oklch(0% 0 0) 2px 3px);
+  }
+
+  /* ---- seven-segment readout ---- */
+  .lcd{
+    font-family:var(--seg); position:relative; display:inline-block;
+    color:var(--txt); letter-spacing:1px; font-variant-numeric:tabular-nums;
+  }
+  .lcd::before{
+    content:attr(data-ghost); position:absolute; inset:0; z-index:-1;
+    color:var(--seg-ghost); pointer-events:none;
+  }
+  .lcd.acc{color:var(--accent)}
+
+  /* ---- corner HUD (clock + accent toggle) ---- */
+  .hud{
+    position:fixed; top:10px; right:12px; z-index:2100;
+    display:flex; align-items:center; gap:10px;
+    background:color-mix(in oklch, var(--bg) 86%, transparent);
+    border:1px solid var(--line); border-radius:6px;
+    padding:5px 8px 5px 10px; backdrop-filter:blur(4px);
+  }
+  .hud .clk{font-family:var(--seg); font-size:16px; color:var(--accent); letter-spacing:1px}
+  .hud .clk::before{content:attr(data-ghost); position:absolute; color:var(--seg-ghost)}
+  .hud .clkwrap{position:relative}
+  .hud button{
+    font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+    background:var(--bg-3); color:var(--txt-2); border:1px solid var(--line);
+    border-radius:4px; padding:4px 7px; cursor:pointer; transition:.15s; line-height:1;
+  }
+  .hud button:hover{border-color:var(--accent); color:var(--accent)}
+  .hud button .sw{display:inline-block; width:8px; height:8px; border-radius:50%;
+    background:var(--accent); vertical-align:-1px; margin-right:5px}
+
+  /* ---- entrance: fade + rise, staggered ---- */
+  @keyframes rise{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:none}}
+  .rise{opacity:0; animation:rise .55s cubic-bezier(.22,.61,.36,1) both}
+  @media (prefers-reduced-motion: reduce){
+    .rise{opacity:1; transform:none; animation:none}
+  }
+
+  /* ---- header ---- */
+  header{max-width:1200px; margin:0 auto; padding:52px 0 26px; text-align:center}
+  .pwd{font-family:var(--term); font-size:20px; color:var(--muted); letter-spacing:.5px}
+  .title{
+    font-family:var(--term); font-size:clamp(48px,9vw,92px); line-height:.86;
+    color:var(--txt); letter-spacing:1px; margin-top:4px;
+  }
+  .blink{animation:blink 1.05s steps(1) infinite; color:var(--accent)}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion: reduce){.blink{animation:none}}
+  .subtitle{font-family:var(--term); font-size:24px; color:var(--txt-2); margin-top:6px; letter-spacing:.5px}
+  .subtitle b{color:var(--accent); font-weight:400}
+  .incl{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:10px}
+  .incl .kw{color:var(--accent-2)}
+  .incl .str{color:var(--txt-2)}
+
+  /* ---- bento columns ---- */
+  .grid{max-width:1200px; margin:0 auto; display:flex; gap:14px; align-items:flex-start; justify-content:center}
+  .col{display:flex; flex-direction:column; gap:14px; min-width:0}
+  .col.left{flex:1 1 320px; max-width:340px}
+  .col.mid{flex:1 1 460px; max-width:480px}
+  .col.right{flex:1 1 350px; max-width:370px}
+  @media (max-width:1040px){
+    .grid{flex-direction:column; align-items:stretch; max-width:600px}
+    .col{flex:1 1 auto; max-width:none}
+  }
+
+  /* ---- window (terminal chrome) ---- */
+  .win{
+    border:1px solid var(--line); border-radius:6px; background:var(--bg-2);
+    transition:border-color .18s, transform .18s, box-shadow .18s; overflow:hidden;
+  }
+  .win:hover{
+    border-color:var(--accent);
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px -14px color-mix(in oklch, var(--accent) 60%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce){.win:hover{transform:none}}
+  .bar{
+    display:flex; align-items:center; gap:10px; padding:8px 12px; user-select:none;
+    border-bottom:1px solid var(--line-2); background:var(--bg-3);
+  }
+  .dots{display:flex; align-items:center; gap:7px; color:var(--muted)}
+  .dots svg{display:block}
+  .bar .sep{width:1px; height:15px; background:var(--txt); opacity:.16; border-radius:2px}
+  .bar .name{font-size:12px; color:var(--muted); letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .bar .name .s{color:var(--accent-2)}
+  .body{padding:16px 16px 18px}
+
+  /* ---- datasheet primitives (recolored for dark) ---- */
+  .label{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
+  .figno{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-left:auto}
+  .kw{color:var(--accent-2)}
+  .mono{font-family:var(--mono)}
+  .muted{color:var(--txt-2)}
+  .dim{color:var(--muted)}
+  .accent{color:var(--accent)}
+
+  /* VT323 section banner (inverted block) */
+  .banner{
+    display:block; background:var(--accent); color:var(--bg);
+    font-family:var(--term); font-size:clamp(24px,4.4vw,34px); text-align:center;
+    padding:8px 12px 6px; letter-spacing:1px; position:relative; overflow:hidden; line-height:1;
+    border-radius:3px;
+  }
+  .banner::after{
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.18;
+    background-image:repeating-linear-gradient(to bottom, transparent 0 2px, var(--bg) 2px 3px);
+  }
+  .hblock{
+    display:inline-block; background:var(--txt); color:var(--bg);
+    font-family:var(--term); font-size:16px; line-height:1; letter-spacing:.5px;
+    padding:3px 9px 4px; margin:0 0 10px;
+  }
+  .hblock.acc{background:var(--accent)}
+
+  hr.d{border:0; border-top:1px dashed var(--line); margin:14px 0}
+  p{margin:0 0 10px}
+  p:last-child{margin-bottom:0}
+
+  /* signature line */
+  .sig{
+    font-family:var(--mono); font-size:12.5px; color:var(--txt-2);
+    margin:0 0 14px; padding:8px 10px; border:1px dashed var(--line); background:var(--bg-3);
+    border-radius:4px; overflow-x:auto; white-space:nowrap;
+  }
+  .sig .kw{color:var(--accent-2)}
+  .sig .fn{color:var(--txt); font-weight:600}
+  .sig .cm{color:var(--muted)}
+
+  /* SVG diagram */
+  .diagram-wrap{width:100%; overflow-x:auto}
+  svg.blockdiagram{display:block; width:100%; height:auto; min-width:520px}
+  .cap{font-size:11px; color:var(--muted); margin-top:12px; line-height:1.5}
+  .cap b{color:var(--txt-2); font-weight:600}
+
+  /* tables */
+  .tbl-scroll{width:100%; overflow-x:auto}
+  table{border-collapse:collapse; width:100%; font-family:var(--mono); font-size:12px; min-width:440px}
+  caption{
+    caption-side:top; text-align:left; font-size:10.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--muted); padding:0 0 10px; font-weight:600;
+  }
+  caption b{color:var(--txt)}
+  thead th{
+    text-align:left; font-weight:600; font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--bg); background:var(--txt); padding:6px 9px; white-space:nowrap;
+  }
+  tbody td, tbody th{
+    padding:7px 9px; border-bottom:1px solid var(--line-2); vertical-align:top; text-align:left; font-weight:400;
+  }
+  tbody tr:nth-child(even){background:var(--bg-3)}
+  td.num, th.num{text-align:right; font-variant-numeric:tabular-nums}
+  td.sym{color:var(--accent-2); font-weight:500}
+  td.p{color:var(--txt)}
+  .typ{font-weight:600; color:var(--txt)}
+  .unit{color:var(--muted)}
+  td.fn{color:var(--txt); white-space:nowrap}
+  td.fn .kw{color:var(--accent-2)}
+  .dnum{font-family:var(--seg); font-size:12px; color:var(--txt); letter-spacing:.5px}
+  .dnum.acc{color:var(--accent)}
+  .note{font-size:11px; color:var(--muted); margin:10px 0 0; line-height:1.55}
+
+  /* functional (parameter | value) table */
+  table.fn{min-width:0}
+  table.fn td{border-bottom:1px solid var(--line-2)}
+  table.fn td:first-child{color:var(--txt); width:46%}
+  table.fn td:last-child{color:var(--txt-2); text-align:right; white-space:nowrap}
+  table.fn td.full{width:auto; color:var(--txt); text-align:left; white-space:normal}
+  .starval{color:var(--accent); font-weight:600; white-space:nowrap; font-family:var(--seg); letter-spacing:.5px}
+
+  /* stats big numbers */
+  .stats{display:flex; gap:20px; flex-wrap:wrap}
+  .stat b{display:block; font-size:30px; line-height:1; color:var(--txt); font-family:var(--term)}
+  .stat b .lcd{font-size:30px; line-height:1}
+  .stat small{color:var(--muted); font-size:12px; display:block; margin-top:5px}
+
+  /* generic rows */
+  .rows{display:flex; flex-direction:column; gap:8px}
+  .r{display:flex; justify-content:space-between; gap:12px; align-items:baseline}
+  .r .l{color:var(--txt)}
+  .r .m{color:var(--muted); white-space:nowrap; font-size:11.5px}
+  .desc{color:var(--muted); font-size:12px; margin-top:2px}
+  .prj{padding:2px 0}
+
+  /* skills / rlimits */
+  .skills{display:grid; grid-template-columns:auto 1fr; gap:8px 16px; font-size:12.5px}
+  .skills .k{color:var(--muted); text-transform:uppercase; font-size:10px; letter-spacing:.1em; padding-top:3px}
+  .skills .v{color:var(--txt)}
+
+  ul.features{list-style:none; margin:0; padding:0}
+  ul.features li{
+    position:relative; padding:4px 0 4px 20px; font-size:12.5px; color:var(--txt);
+    border-bottom:1px dotted var(--line-2);
+  }
+  ul.features li:last-child{border-bottom:0}
+  ul.features li::before{content:"▪"; position:absolute; left:2px; top:4px; color:var(--accent); font-size:11px}
+
+  /* contact */
+  .contact-rows{display:flex; flex-direction:column; gap:9px; font-size:13px}
+  .contact-rows a{display:inline-flex; align-items:center; gap:10px; transition:.15s}
+  .contact-rows a:hover{color:var(--accent)}
+  .contact-rows a:hover svg{fill:var(--accent)}
+  .contact-rows svg{width:16px; height:16px; fill:var(--txt-2); flex:0 0 auto; transition:.15s}
+
+  .accent-chip{
+    display:inline-block; background:var(--accent); color:var(--bg);
+    font-family:var(--mono); font-weight:600; font-size:10px; letter-spacing:.12em;
+    padding:2px 7px; text-transform:uppercase; border-radius:2px;
+  }
+  .colophon{font-size:11px; color:var(--muted); line-height:1.6; margin-top:8px}
+
+  footer{max-width:1200px; margin:28px auto 0; text-align:center; color:var(--muted); font-size:12px}
+  footer .accent{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- corner HUD -->
+<div class="hud rise">
+  <div class="clkwrap"><span class="clk" id="clk" data-ghost="88:88:88">00:00:00</span></div>
+  <button id="accBtn" aria-label="toggle accent colour"><span class="sw"></span><span id="accLabel">amber</span></button>
+</div>
+
+<header class="rise">
+  <div class="pwd">$ cat navon.datasheet</div>
+  <div class="title">~/navon<span class="blink">_</span></div>
+  <div class="subtitle">kernel dev <b>·</b> ctf <b>·</b> machine learning</div>
+  <div class="incl"><span class="kw">#include</span> &lt;<span class="str">navon.h</span>&gt; &nbsp;<span class="dim">// -lnavon · rev 2028 · ABI unstable</span></div>
+</header>
+
+<main class="grid">
+
+  <!-- ================= LEFT ================= -->
+  <div class="col left">
+
+    <!-- § header / features -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots" aria-hidden="true">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+        </span>
+        <span class="sep"></span>
+        <span class="name"><span class="s">§0</span> · features.h</span>
+      </div>
+      <div class="body">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px">
+          <div>
+            <div style="font-family:var(--term); font-size:26px; line-height:1; color:var(--txt)">NAVON&#8209;JL</div>
+            <div class="dim" style="font-size:11px; margin-top:2px">libnavon · systems lib</div>
+          </div>
+          <div style="text-align:right; border:1px solid var(--line); border-radius:4px; padding:5px 9px; background:var(--bg-3)">
+            <div class="lcd acc" data-ghost="8.888" style="font-size:18px">2.028</div>
+            <div class="label" style="margin-top:3px">abi v6.12</div>
+          </div>
+        </div>
+        <ul class="features">
+          <li>Upstream Linux kernel contributor — mainline + stable</li>
+          <li>Head of CTF team &ldquo;PlayingG0d&rdquo;</li>
+          <li>National #1 · international top-10 finishes</li>
+          <li>RL research — Kuhn Poker via Double DQN</li>
+          <li>Runs on entry-level hardware (MX250-class)</li>
+          <li>Low footprint: 3 MB / forward pass</li>
+          <li>Zero-day disclosure &amp; responsible patching</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- deps.mk -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§4</span> · deps.mk</span>
+      </div>
+      <div class="body">
+        <div class="tbl-scroll" style="margin-bottom:16px">
+          <table class="fn">
+            <caption><b>4.1</b> requires: <span style="text-transform:none; letter-spacing:0; color:var(--muted)">// prerequisites, resolved</span></caption>
+            <tbody>
+              <tr><td>education &gt;= manipal</td><td>B.Tech CS · 2024–28</td></tr>
+              <tr><td>education &gt;= iitm</td><td>BS Data Sci · diploma</td></tr>
+              <tr><td>toolchain</td><td>git · qemu · docker</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <caption><b>Table 3.</b> install: open-source pkgs on the index</caption>
+            <thead><tr><th>Package</th><th class="num">★</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><a class="link" href="https://github.com/Magniquick/KeyCrawler">KeyCrawler</a></td>
+                <td class="num"><span class="starval">108</span></td>
+                <td><a class="link" href="https://github.com/Magniquick/KeyCrawler">GitHub ↗</a></td>
+              </tr>
+              <tr>
+                <td><a class="link" href="https://github.com/Magniquick/atuin-win">atuin-win</a></td>
+                <td class="num"><span class="starval">012</span></td>
+                <td><a class="link" href="https://github.com/Magniquick/atuin-win">GitHub ↗</a></td>
+              </tr>
+              <tr><td>ml-iit</td><td class="num unit">—</td><td class="dim">internal</td></tr>
+              <tr><td>font-arena</td><td class="num unit">—</td><td class="dim">internal</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">KeyCrawler: crawls leaked Android keybox.xml keys across GitHub — validate, dedup, prune, cached pagination. atuin-win: msys2 UCRT64 + GH Actions.</p>
+        <p class="note"><span class="mono">$ cc -std=c23 main.c -lnavon</span> — transitive deps (☕, sleep) under-provisioned.</p>
+      </div>
+    </section>
+
+    <!-- rlimits -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§5</span> · rlimits</span>
+      </div>
+      <div class="body">
+        <p class="note" style="margin:0 0 12px; color:var(--txt-2)"><span class="mono">getrlimit(RLIMIT_SKILL, &amp;rl)</span> — caps enforced by the scheduler:</p>
+        <div class="skills">
+          <div class="k">CAP_LANG</div>
+          <div class="v">Python (PyTorch · requests · httpx) · Java · C · bash / zsh</div>
+          <div class="k">CAP_TOOL</div>
+          <div class="v">Git · Linux · Shell · QEMU · Burp Suite · IDA</div>
+          <div class="k">CAP_SYS</div>
+          <div class="v">Kernel Build System · GitHub Actions CI/CD · Docker</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= MIDDLE ================= -->
+  <div class="col mid">
+
+    <!-- struct navon -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§1</span> · struct navon</span>
+      </div>
+      <div class="body">
+        <span class="banner">FROM VULN RESEARCH<br>TO REINFORCEMENT LEARNING</span>
+        <p class="muted" style="margin:12px 0 12px; font-size:12.5px">
+          <strong style="color:var(--txt); font-weight:600">libnavon</strong> exposes a 2nd-year B.Tech CS student at Manipal &amp; Linux kernel contributor (mainline + stable) as a linkable systems library — three subsystems (<span class="mono">kernel</span>, <span class="mono">security</span>, <span class="mono">ml</span>) behind one stable entry point.
+        </p>
+        <p class="sig"><span class="kw">navon::</span><span class="fn">solve</span>(problem_t <span class="kw">*</span>p) <span class="kw">-&gt;</span> solution_t <span class="cm">// noexcept(false), blocks on ☕</span></p>
+        <div class="diagram-wrap">
+          <svg class="blockdiagram" viewBox="0 0 760 356" role="img" aria-label="Memory layout of struct navon showing four fields — kernel, security, ml and open_source — with byte offsets and sizes.">
+            <!-- title -->
+            <text x="40" y="26" fill="var(--txt)" font-size="13" font-weight="600" font-family="IBM Plex Mono, monospace">struct <tspan fill="var(--accent)">navon</tspan> {</text>
+            <text x="700" y="26" text-anchor="end" fill="var(--muted)" font-size="11" font-family="IBM Plex Mono, monospace">sizeof = 0x30 (48 B)</text>
+            <!-- ruler header -->
+            <text x="60" y="52" fill="var(--muted)" font-size="9.5" letter-spacing="1" font-family="IBM Plex Mono, monospace">OFFSET</text>
+            <text x="182" y="52" fill="var(--muted)" font-size="9.5" letter-spacing="1" font-family="IBM Plex Mono, monospace">FIELD</text>
+            <text x="620" y="52" fill="var(--muted)" font-size="9.5" letter-spacing="1" font-family="IBM Plex Mono, monospace">SIZE / TYPE</text>
+            <line x1="40" y1="60" x2="720" y2="60" stroke="var(--line)" stroke-width="1"/>
+
+            <!-- kernel -->
+            <rect x="140" y="70" width="460" height="46" fill="var(--bg-3)" stroke="var(--line)"/>
+            <rect x="140" y="70" width="6" height="46" fill="var(--accent)"/>
+            <text x="60" y="98" fill="var(--txt-2)" font-size="12" font-weight="600" font-family="IBM Plex Mono, monospace">0x00</text>
+            <text x="160" y="90" fill="var(--txt)" font-size="12.5" font-weight="600" font-family="IBM Plex Mono, monospace">kernel</text>
+            <text x="160" y="108" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">mainline patches · ALSA · v6.12 / v5.10</text>
+            <text x="700" y="90" text-anchor="end" fill="var(--accent)" font-size="10.5" font-weight="600" font-family="IBM Plex Mono, monospace">patch_t[]</text>
+            <text x="700" y="106" text-anchor="end" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">16 B</text>
+
+            <!-- security -->
+            <rect x="140" y="122" width="460" height="46" fill="var(--bg-2)" stroke="var(--line)"/>
+            <rect x="140" y="122" width="6" height="46" fill="var(--accent)"/>
+            <text x="60" y="150" fill="var(--txt-2)" font-size="12" font-weight="600" font-family="IBM Plex Mono, monospace">0x10</text>
+            <text x="160" y="142" fill="var(--txt)" font-size="12.5" font-weight="600" font-family="IBM Plex Mono, monospace">security</text>
+            <text x="160" y="160" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">CTF · disclosure · exploit dev</text>
+            <text x="700" y="142" text-anchor="end" fill="var(--accent)" font-size="10.5" font-weight="600" font-family="IBM Plex Mono, monospace">ctf_ctx_t</text>
+            <text x="700" y="158" text-anchor="end" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">8 B</text>
+
+            <!-- ml -->
+            <rect x="140" y="174" width="460" height="46" fill="var(--bg-3)" stroke="var(--line)"/>
+            <rect x="140" y="174" width="6" height="46" fill="var(--accent)"/>
+            <text x="60" y="202" fill="var(--txt-2)" font-size="12" font-weight="600" font-family="IBM Plex Mono, monospace">0x18</text>
+            <text x="160" y="194" fill="var(--txt)" font-size="12.5" font-weight="600" font-family="IBM Plex Mono, monospace">ml</text>
+            <text x="160" y="212" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">Double DQN · Kuhn Poker · 3 MB/pass</text>
+            <text x="700" y="194" text-anchor="end" fill="var(--accent)" font-size="10.5" font-weight="600" font-family="IBM Plex Mono, monospace">policy_t *</text>
+            <text x="700" y="210" text-anchor="end" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">8 B</text>
+
+            <!-- open_source -->
+            <rect x="140" y="226" width="460" height="46" fill="var(--bg-2)" stroke="var(--line)"/>
+            <rect x="140" y="226" width="6" height="46" fill="var(--accent)"/>
+            <text x="60" y="254" fill="var(--txt-2)" font-size="12" font-weight="600" font-family="IBM Plex Mono, monospace">0x20</text>
+            <text x="160" y="246" fill="var(--txt)" font-size="12.5" font-weight="600" font-family="IBM Plex Mono, monospace">open_source</text>
+            <text x="160" y="264" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">repos · maintainer · ★ counts</text>
+            <text x="700" y="246" text-anchor="end" fill="var(--accent)" font-size="10.5" font-weight="600" font-family="IBM Plex Mono, monospace">repo_t[N]</text>
+            <text x="700" y="262" text-anchor="end" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">8 B</text>
+
+            <!-- padding / close -->
+            <text x="60" y="298" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">0x28</text>
+            <text x="160" y="298" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">_pad[8]  /* reserved — future subsystems */</text>
+            <text x="40" y="332" fill="var(--txt)" font-size="13" font-weight="600" font-family="IBM Plex Mono, monospace">};</text>
+            <text x="700" y="332" text-anchor="end" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">__attribute__((packed))</text>
+          </svg>
+        </div>
+        <p class="cap"><b>Fig. 1</b> — Memory layout of <span class="mono">struct navon</span>. Fields aligned on 8-byte boundaries; <span class="mono">_pad</span> reserved for ABI growth. Allocated on the caffeine heap.</p>
+      </div>
+    </section>
+
+    <!-- characteristics.tbl -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§2</span> · characteristics.tbl</span>
+      </div>
+      <div class="body">
+        <div class="tbl-scroll">
+          <table>
+            <caption><b>Table 1.</b> Complexity &amp; performance @ -O2, MX250 / 8 GB</caption>
+            <thead>
+              <tr>
+                <th>Parameter</th><th>Symbol</th>
+                <th class="num">Min</th><th class="num">Typ</th><th class="num">Max</th><th>Unit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="p">Kuhn-poker convergence (wall)</td><td class="sym">t<sub>CONV</sub></td><td class="num"><span class="dnum">1.0</span></td><td class="num"><span class="dnum acc">1.5</span></td><td class="num"><span class="dnum">2.0</span></td><td class="unit">h</td></tr>
+              <tr><td class="p">Model footprint / fwd pass</td><td class="sym">M<sub>FWD</sub></td><td class="num unit">—</td><td class="num"><span class="dnum acc">3</span></td><td class="num"><span class="dnum">3</span></td><td class="unit">MB</td></tr>
+              <tr><td class="p">Compute accelerator</td><td class="sym">DEV<sub>GPU</sub></td><td class="num">MX250</td><td class="num typ">MX250</td><td class="num">MX250</td><td class="unit">—</td></tr>
+              <tr><td class="p">CTF placement rank</td><td class="sym">R<sub>CTF</sub></td><td class="num"><span class="dnum acc">1</span></td><td class="num"><span class="dnum acc">1</span></td><td class="num"><span class="dnum">8</span></td><td class="unit">rank</td></tr>
+              <tr><td class="p">Kernel ABI supported</td><td class="sym">V<sub>KRNL</sub></td><td class="num"><span class="dnum">5.10</span></td><td class="num"><span class="dnum acc">6.12</span></td><td class="num"><span class="dnum">6.12</span></td><td class="unit">rev</td></tr>
+              <tr><td class="p">Keybox crawl — search space</td><td class="sym">O(crawl)</td><td class="num">O(1)*</td><td class="num typ">O(n)</td><td class="num">O(n·lg n)</td><td class="unit">time</td></tr>
+              <tr><td class="p">Records recovered (1 disclosure)</td><td class="sym">N<sub>REC</sub></td><td class="num"><span class="dnum">1k</span></td><td class="num unit">—</td><td class="num"><span class="dnum">21k</span></td><td class="unit">rows</td></tr>
+              <tr><td class="p">Flagship repo star rating</td><td class="sym">★<sub>MAX</sub></td><td class="num"><span class="dnum">12</span></td><td class="num unit">—</td><td class="num"><span class="dnum acc">108</span></td><td class="unit">★</td></tr>
+              <tr><td class="p">Support window (uptime)</td><td class="sym">t<sub>UP</sub></td><td class="num"><span class="dnum">2</span></td><td class="num"><span class="dnum">2</span></td><td class="num"><span class="dnum">4</span></td><td class="unit">yr</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Note 1: Convergence to Nash-equilibrium-like strategies verified on a single MX250; betting probabilities closely approximate theoretical Nash. *Cached pagination amortises repeated crawls toward O(1). Do not exceed absolute maximum ratings under exam-season deadlines.</p>
+      </div>
+    </section>
+
+    <!-- api/syscalls.h -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§3</span> · api/syscalls.h</span>
+      </div>
+      <div class="body">
+        <div class="tbl-scroll">
+          <table>
+            <caption><b>Table 2.</b> Exported symbols — <span class="mono">nm -D libnavon.so</span></caption>
+            <thead><tr><th>Signature</th><th>Synopsis</th><th>Ref</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="fn"><span class="kw">int</span> kernel_contribute(patch_t)</td>
+                <td>ALSA: hda/realtek mute-LED quirk for HP Pavilion x360 14-dy1xxx (ALC295); merged v6.12 mainline + v5.10 stable.</td>
+                <td><a class="link" href="https://github.com/torvalds/linux/commit/b11a74ac4f545626d0dc95a8ca8c41df90532bf3"><span class="mono">b11a74ac ↗</span></a></td>
+              </tr>
+              <tr>
+                <td class="fn"><span class="kw">int</span> disclose_vuln(target_t)</td>
+                <td>Responsible-disclosure path. MIT Manipal SLcM (21k+ records); webbites.io (~1k private bookmarks). Returns 0 once patched.</td>
+                <td class="dim">private</td>
+              </tr>
+              <tr>
+                <td class="fn">flag_t ctf_play(chall_t)</td>
+                <td>Team &ldquo;PlayingG0d&rdquo;. NiteCTF #8/#8 intl, Citadel #1 (₹7.5k). Also authors challenges (crypto / stego).</td>
+                <td class="dim">§3.5</td>
+              </tr>
+              <tr>
+                <td class="fn">policy_t rl_train(env_t)</td>
+                <td>Double DQN over Kuhn Poker; converges to Nash-like play in 1–2 h. First working Gymnasium env for the game.</td>
+                <td><a class="link" href="https://github.com/Magniquick/gym-kuhn-poker">gym ↗</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="d">
+        <div class="tbl-scroll" style="margin-bottom:16px">
+          <table class="fn">
+            <caption><b>3.6</b> rl_train() — env_t = Kuhn Poker</caption>
+            <tbody>
+              <tr><td class="full">IIM Kozhikode · Prof. M. Shahid Abdulla</td></tr>
+              <tr><td>Method</td><td>Double DQN ≈ CFR</td></tr>
+              <tr><td>Gym env</td><td><a class="link" href="https://github.com/Magniquick/gym-kuhn-poker">gym-kuhn-poker</a></td></tr>
+              <tr><td>Convergence</td><td>Nash-like, 1–2 h</td></tr>
+              <tr><td>Paper</td><td><a class="link" href="https://typst.app/project/rSMWAKD03peYDTGXp4Mzjr">typst.app ↗</a></td></tr>
+              <tr><td>Project</td><td><a class="link" href="https://github.com/Magniquick/reinforcement-learning">repo ↗</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tbl-scroll">
+          <table class="fn">
+            <caption><b>3.7</b> upstream_pr() — accepted patches</caption>
+            <tbody>
+              <tr><td><a class="link" href="https://github.com/System64fumo/syshud/pull/37">syshud #37</a></td><td>kbd + backlight</td></tr>
+              <tr><td><a class="link" href="https://github.com/vicinaehq/extensions/pull/66">vicinae #66</a></td><td>swww fallback</td></tr>
+              <tr><td><a class="link" href="https://github.com/RayBytes/ChatMock/pull/72">ChatMock #72</a></td><td>app compat</td></tr>
+              <tr><td><a class="link" href="https://github.com/TrueMyst/BeatPrints/pull/1">BeatPrints #1</a> · <a class="link" href="https://github.com/TrueMyst/BeatPrints/pull/2">#2</a></td><td>cross-dir + err</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= RIGHT ================= -->
+  <div class="col right">
+
+    <!-- fig1_block.svg / kernel -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§3.1</span> · kernel_contribute.c</span>
+      </div>
+      <div class="body">
+        <div class="label">Apr 2025 · v6.12 mainline + v5.10 stable</div>
+        <p class="muted" style="margin:8px 0 0; font-size:12.5px">ALSA: hda/realtek: Add mute LED quirk for HP Pavilion x360 14-dy1xxx</p>
+        <p class="sig" style="white-space:normal; margin:10px 0 0"><span class="cm">commit</span> <span class="fn accent">b11a74ac4f54</span><br><span class="cm">Author:</span> Navon John Lukose<br>enable mute-LED support for ALC295-based Pavilion convertibles</p>
+        <div class="dim" style="font-size:12px; margin-top:10px">→ <a class="link" href="https://github.com/torvalds/linux/commit/b11a74ac4f545626d0dc95a8ca8c41df90532bf3">mainline commit ↗</a></div>
+      </div>
+    </section>
+
+    <!-- ctf.tbl -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§3.5</span> · ctf_play.tbl</span>
+      </div>
+      <div class="body">
+        <div class="stats" style="justify-content:space-between; margin-bottom:12px">
+          <div class="stat"><b><span class="lcd" data-ghost="88">#8</span></b><small>NiteCTF '24 · intl</small></div>
+          <div class="stat"><b><span class="lcd acc" data-ghost="88">#1</span></b><small>Citadel '25 · ₹7.5k</small></div>
+          <div class="stat"><b><span class="lcd" data-ghost="88">#8</span></b><small>NiteCTF '25 · intl</small></div>
+        </div>
+        <span class="hblock acc">// authored</span>
+        <div class="rows">
+          <div class="r"><span class="l">Indomitus CTF <span class="dim">(MIST)</span></span><span class="m">stego · crypto</span></div>
+          <div class="r"><span class="l">LLM Token-Shift Cipher</span><span class="m">llama_cpp · gguf</span></div>
+          <div class="r"><span class="l">Polynomial-Gate Encoding</span><span class="m">torch · dill</span></div>
+          <div class="r"><span class="l dim">mod @ Oh My Zsh discord</span><span class="m"><span class="lcd" data-ghost="888">184</span>k+ ★</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- security.log -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§3.4</span> · disclose_vuln.log</span>
+      </div>
+      <div class="body">
+        <div class="tbl-scroll">
+          <table class="fn">
+            <caption><b>3.4</b> disclose_vuln() — call log</caption>
+            <tbody>
+              <tr><td>MIT Manipal SLcM</td><td><span class="starval">21k+</span> rows</td></tr>
+              <tr><td>webbites.io</td><td><span class="starval">~1k</span> bkmk</td></tr>
+              <tr><td class="full dim" style="font-size:11px">All privately reported &amp; since patched. errno cleared.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- system.info -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§6</span> · host.info</span>
+      </div>
+      <div class="body">
+        <table class="fn">
+          <tbody>
+            <tr><td>host</td><td>magniquick</td></tr>
+            <tr><td>os</td><td>arch (cachyos)</td></tr>
+            <tr><td>wm / term</td><td>hyprland · kitty</td></tr>
+            <tr><td>shell</td><td>zsh + atuin</td></tr>
+            <tr><td>editor</td><td>nvim</td></tr>
+            <tr><td>uptime</td><td>2nd yr b.tech</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- rev.log -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§7</span> · rev.log</span>
+      </div>
+      <div class="body">
+        <div class="tbl-scroll">
+          <table>
+            <caption><b>Revision History</b> <span style="text-transform:none; letter-spacing:0; color:var(--muted)">// git log --oneline</span></caption>
+            <thead><tr><th>Rev</th><th>Date</th><th>Commit</th></tr></thead>
+            <tbody>
+              <tr><td class="dnum">A</td><td>2024</td><td>init — enrolled at Manipal</td></tr>
+              <tr><td class="dnum">B</td><td>Apr '25</td><td>feat(kernel): first patch merged</td></tr>
+              <tr><td class="dnum">C</td><td>2025</td><td>research(rl): DDQN; win Citadel #1</td></tr>
+              <tr><td class="dnum acc">D</td><td class="typ">2028</td><td class="typ">release(1.0): B.Tech complete [proj]</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- contact -->
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name"><span class="s">§8</span> · contact</span>
+      </div>
+      <div class="body">
+        <p class="label" style="margin:0 0 12px">Maintainer / Bug Reports</p>
+        <div class="contact-rows">
+          <a href="https://github.com/Magniquick" rel="me">
+            <svg viewBox="0 0 24 24"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.32.47-2.39 1.24-3.23-.13-.3-.54-1.53.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.23 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58C20.57 22.29 24 17.8 24 12.5 24 5.87 18.63.5 12 .5z"/></svg>
+            <span>github.com/Magniquick</span>
+          </a>
+          <a href="mailto:navonjohnlukose@gmail.com">
+            <svg viewBox="0 0 24 24"><path d="M2 4h20v16H2V4zm2 2v.5l8 5 8-5V6H4zm16 3-8 5-8-5v9h16V9z"/></svg>
+            <span>navonjohnlukose@gmail.com</span>
+          </a>
+          <a href="tel:+917907925646">
+            <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.3 2.2z"/></svg>
+            <span>+91 79079 25646</span>
+          </a>
+        </div>
+        <hr class="d">
+        <span class="accent-chip">Preliminary</span>
+        <p class="colophon">libnavon · rev 2028 · <span class="mono">LIBNAVON(3)</span>. Tongue-in-cheek but semantically honest; subject to change without notice. No warranty; not fit for safety-critical poker. Typeset in IBM Plex Mono &amp; VT323 · licensed <span class="mono">MIT-0</span>.</p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="rise">copyleft 2026 · navon john lukose · <span class="accent">§</span> built on gnu/linux, powered by coffee</footer>
+
+<script>
+  // ---- staggered entrance (~45ms apart), skip under reduced-motion ----
+  (function(){
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    document.querySelectorAll('.rise').forEach(function(el, i){
+      el.style.animationDelay = (i * 45) + 'ms';
+    });
+  })();
+
+  // ---- accent toggle (persist to localStorage) ----
+  (function(){
+    var root = document.documentElement, btn = document.getElementById('accBtn'),
+        lbl = document.getElementById('accLabel');
+    function apply(a){
+      root.setAttribute('data-accent', a);
+      lbl.textContent = a;
+    }
+    var saved = null;
+    try{ saved = localStorage.getItem('navon-accent'); }catch(e){}
+    apply(saved === 'cyan' ? 'cyan' : 'amber');
+    btn.addEventListener('click', function(){
+      var next = root.getAttribute('data-accent') === 'cyan' ? 'amber' : 'cyan';
+      apply(next);
+      try{ localStorage.setItem('navon-accent', next); }catch(e){}
+    });
+  })();
+
+  // ---- live DSEG7 clock ----
+  (function(){
+    var el = document.getElementById('clk');
+    function pad(n){ return (n<10?'0':'') + n; }
+    function tick(){
+      var d = new Date();
+      el.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    }
+    tick(); setInterval(tick, 1000);
+  })();
+</script>
+<script src="pet/oneko.js" data-cat="pet/oneko.gif"></script>
+</body>
+</html>

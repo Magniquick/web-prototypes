@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>navon — ~/</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+  /* ---- fonts (legit-sourced: VT323 = Google Fonts, Departure Mono = departuremono.com, DSEG7 = keshikan.net/fonts) ---- */
+  @font-face{
+    font-family:"Departure Mono";
+    src:url("fonts/DepartureMono-Regular.woff2") format("woff2");
+    font-display:swap;
+  }
+  @font-face{
+    font-family:"DSEG7";
+    src:url("fonts/DSEG7Classic-Regular.woff2") format("woff2");
+    font-display:swap;
+  }
+
+  /* ---- palette: Navon's neutral OKLCH theme-default (all colors via vars → re-skinnable) ---- */
+  :root{
+    --bg-1: oklch(19% 0 0);
+    --bg-2: oklch(23% 0 0);
+    --bg-3: oklch(27% 0 0);
+    --txt-1: oklch(90% 0 0);
+    --txt-2: oklch(75% 0 0);
+    --txt-3: oklch(50% 0 0);
+    --txt-4: oklch(40% 0 0);
+    --txt-err: oklch(70% 0.11 0);
+    --line: oklch(34% 0 0);
+    --accent: var(--txt-err);
+    --mono:"Departure Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+    --term:"VT323","Departure Mono", monospace;
+    --seg:"DSEG7","VT323", monospace;
+    /* dim "ghost 8s" behind lit LCD digits */
+    --seg-ghost: color-mix(in srgb, var(--txt-1) 12%, transparent);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg-1); color:var(--txt-1);
+    font-family:var(--mono); font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:none; text-rendering:optimizeLegibility;
+    padding:0 14px 48px;
+  }
+  a{color:inherit; text-decoration:none}
+  a.link{color:var(--txt-1); border-bottom:1px solid var(--txt-4); transition:.15s}
+  a.link:hover{color:var(--accent); border-bottom-color:var(--accent)}
+  ::selection{background:oklch(44% 0 0); color:#fff}
+
+  /* ---- scanline overlay (CRT) ---- */
+  html::before{
+    content:""; position:fixed; inset:0; z-index:1000; pointer-events:none; opacity:.5;
+    --h:2px; --gap:1px; --c:color-mix(in srgb, var(--bg-1) 62%, transparent);
+    background-image:repeating-linear-gradient(to bottom,
+      transparent, transparent var(--h),
+      var(--c) var(--h), var(--c) calc(var(--h) + var(--gap)));
+  }
+
+  /* ---- seven-segment LCD readout (big numbers only) ---- */
+  .lcd{
+    font-family:var(--seg); position:relative; display:inline-block;
+    color:var(--txt-1); letter-spacing:1px;
+  }
+  .lcd::before{ /* ghost 8s behind lit digits */
+    content:attr(data-ghost); position:absolute; inset:0; z-index:-1;
+    color:var(--seg-ghost); pointer-events:none;
+  }
+  .lcd.acc{color:var(--accent)}
+
+  /* ---- entrance animation (fade + rise, staggered) ---- */
+  @keyframes rise{
+    from{opacity:0; transform:translateY(14px)}
+    to{opacity:1; transform:translateY(0)}
+  }
+  .rise{opacity:0; animation:rise .5s cubic-bezier(.22,.61,.36,1) both}
+  header.rise{animation-delay:0ms}
+  @media (prefers-reduced-motion: reduce){
+    .blink{animation:none}
+    .rise{opacity:1; transform:none; animation:none}
+  }
+
+  /* ---- header ---- */
+  header{max-width:1180px; margin:0 auto; padding:40px 0 26px; text-align:center}
+  .pwd{font-family:var(--term); font-size:20px; color:var(--txt-3)}
+  .title{
+    font-family:var(--term); font-size:clamp(44px,8vw,76px); line-height:.9;
+    color:var(--txt-1); letter-spacing:1px; margin-top:2px;
+  }
+  .blink{animation:blink 1.05s steps(1) infinite; color:var(--accent)}
+  @keyframes blink{50%{opacity:0}}
+  .subtitle{font-family:var(--term); font-size:22px; color:var(--txt-2); margin-top:8px}
+  .subtitle b{color:var(--accent); font-weight:400}
+
+  /* ---- bento columns ---- */
+  .grid{max-width:1180px; margin:0 auto; display:flex; gap:12px; align-items:flex-start; justify-content:center}
+  .col{display:flex; flex-direction:column; gap:12px; min-width:0}
+  .col.left{flex:0 1 320px}
+  .col.mid{flex:0 1 460px}
+  .col.right{flex:0 1 340px}
+  @media (max-width:1000px){
+    .grid{flex-direction:column; align-items:stretch; max-width:560px}
+    .col{flex:1 1 auto}
+  }
+
+  /* ---- window ---- */
+  .win{border:1px solid var(--line); border-radius:5px; background:transparent; transition:border-color .18s}
+  .win:hover{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+  .bar{display:flex; align-items:center; gap:10px; padding:10px 12px; user-select:none}
+  .dots{display:flex; align-items:center; gap:7px; color:var(--txt-3)}
+  .dots svg{display:block}
+  .bar .sep{width:1px; height:16px; background:var(--txt-1); opacity:.16; border-radius:2px}
+  .bar .name{font-size:13px; color:var(--txt-3)}
+  .body{padding:2px 14px 15px}
+  .body.pad{padding:6px 16px 18px}
+
+  h3.k{color:var(--txt-3); font-size:13px; margin:0 0 6px}
+  .muted{color:var(--txt-2)}
+  .dim{color:var(--txt-3)}
+  .accent{color:var(--accent)}
+  hr.d{border:0; border-top:1px dashed var(--line); margin:12px 0}
+
+  /* ---- ghostk-style inverted block heading (from motd banner, used consistently) ---- */
+  .hblock{
+    display:inline-block; background:var(--txt-1); color:var(--bg-1);
+    font-family:var(--term); font-size:15px; line-height:1; letter-spacing:1px;
+    padding:4px 9px 5px; margin:0 0 10px; text-transform:lowercase;
+  }
+  .hblock.acc{background:var(--accent)}
+
+  /* whoami */
+  .who{display:flex; gap:16px}
+  .who img{width:118px; height:118px; border:1px solid var(--line); image-rendering:auto; object-fit:cover; background:var(--bg-2)}
+  .who .meta{font-family:var(--term); font-size:19px; line-height:1.35}
+  .who .meta .row{display:flex; gap:8px; color:var(--txt-2)}
+  .who .intro{font-family:var(--term); font-size:19px; color:var(--txt-1); margin-top:8px}
+
+  /* motd banner */
+  .banner{
+    display:block; background:var(--txt-1); color:var(--bg-1);
+    font-family:var(--term); font-size:clamp(26px,4.6vw,40px); text-align:center;
+    padding:12px 10px; letter-spacing:1px; position:relative; overflow:hidden;
+  }
+  .banner::after{ /* faint scanlines over the banner */
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.22;
+    background-image:repeating-linear-gradient(to bottom, transparent 0 2px, var(--bg-1) 2px 3px);
+  }
+  .motd{font-size:14px; color:var(--txt-2); margin-top:14px}
+  .todo{font-family:var(--mono); color:var(--txt-2); white-space:pre-wrap; margin:10px 0 0}
+  .quote{color:var(--txt-3); font-style:italic; margin-top:12px}
+
+  /* generic list rows */
+  .rows{display:flex; flex-direction:column; gap:9px}
+  .r{display:flex; justify-content:space-between; gap:12px; align-items:baseline}
+  .r .l{color:var(--txt-1)}
+  .r .m{color:var(--txt-3); white-space:nowrap; font-size:13px}
+  .r .star{color:var(--txt-2); font-family:var(--term); font-size:16px}
+  .r .star .lcd{font-size:15px; letter-spacing:1px}
+  .desc{color:var(--txt-3); font-size:13px; margin-top:2px}
+  .prj{padding:2px 0}
+
+  /* links window */
+  .links{display:flex; flex-direction:column; gap:12px}
+  .links a{display:flex; align-items:center; gap:11px; color:var(--txt-1); transition:opacity .15s}
+  .links a:hover{opacity:.6}
+  .links svg{width:20px; height:20px; fill:var(--txt-1)}
+  .links .h{color:var(--txt-3)}
+
+  /* neofetch */
+  .neo{display:flex; gap:16px}
+  .neo pre.logo{margin:0; color:var(--accent); font-size:11px; line-height:1.15}
+  .neo .kv{font-size:13.5px}
+  .neo .kv .row{display:flex; gap:8px}
+  .neo .kv .key{color:var(--accent); width:74px; flex:0 0 auto}
+  .neo .kv .val{color:var(--txt-2)}
+  .sw{display:flex; gap:0; margin-top:8px}
+  .sw span{width:15px; height:15px}
+
+  /* stats/ctf big numbers */
+  .stats{display:flex; gap:18px; flex-wrap:wrap}
+  .stat{font-family:var(--term)}
+  .stat b{display:block; font-size:38px; line-height:1; color:var(--txt-1)}
+  .stat b .lcd{font-size:38px; line-height:1}
+  .stat small{color:var(--txt-3); font-size:14px; display:block; margin-top:3px}
+
+  /* kernel snippet */
+  pre.code{margin:8px 0 0; padding:10px 12px; background:var(--bg-2); border:1px solid var(--line);
+    border-radius:4px; color:var(--txt-2); font-size:12.5px; overflow-x:auto; white-space:pre}
+  pre.code .c{color:var(--txt-3)}
+  pre.code .a{color:var(--accent)}
+
+  /* 88x31 buttons */
+  .btns{display:flex; flex-wrap:wrap; gap:4px}
+  .b31{width:88px; height:31px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+    text-align:center; font-family:var(--mono); font-size:9px; line-height:1.05; color:var(--txt-1);
+    background:var(--bg-2); image-rendering:pixelated; padding:2px; letter-spacing:.2px; cursor:default}
+  .b31.inv{background:var(--txt-1); color:var(--bg-1)}
+  .b31.err{border-color:var(--accent); color:var(--accent)}
+  .b31 b{color:var(--accent)}
+
+  /* skills box */
+  pre.box{margin:0; color:var(--txt-2); font-size:12.5px; line-height:1.45; white-space:pre; overflow-x:auto}
+  pre.box .h{color:var(--txt-1)}
+
+  footer{max-width:1180px; margin:26px auto 0; text-align:center; color:var(--txt-3); font-size:13px}
+</style>
+</head>
+<body>
+
+<header class="rise">
+  <div class="pwd">$ pwd</div>
+  <div class="title">~/navon<span class="blink">_</span></div>
+  <div class="subtitle">kernel dev <b>·</b> ctf <b>·</b> machine learning</div>
+</header>
+
+<main class="grid">
+
+  <!-- ================= LEFT ================= -->
+  <div class="col left">
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots" aria-hidden="true">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+        </span>
+        <span class="sep"></span>
+        <span class="name">navon@magniquick:~</span>
+      </div>
+      <div class="body pad">
+        <div class="who">
+          <img src="https://github.com/Magniquick.png" alt="Navon">
+          <div class="meta">
+            <div class="row">◢ Navon John Lukose</div>
+            <div class="row">◈ CS · Manipal '28</div>
+            <div class="row">◉ kernel contributor</div>
+            <div class="row">◇ he/him</div>
+          </div>
+        </div>
+        <div class="intro">&gt; hey, i'm navon. i make the<br>kernel go beep and watch<br>ctf flags fall. :3</div>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">ls /sys/class/links</span>
+      </div>
+      <div class="body pad links">
+        <a href="https://github.com/Magniquick" rel="me">
+          <svg viewBox="0 0 24 24"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.32.47-2.39 1.24-3.23-.13-.3-.54-1.53.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.23 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58C20.57 22.29 24 17.8 24 12.5 24 5.87 18.63.5 12 .5z"/></svg>
+          <span>Magniquick</span>
+        </a>
+        <a href="mailto:navonjohnlukose@gmail.com">
+          <svg viewBox="0 0 24 24"><path d="M2 4h20v16H2V4zm2 2v.5l8 5 8-5V6H4zm16 3-8 5-8-5v9h16V9z"/></svg>
+          <span>navonjohnlukose@gmail.com</span>
+        </a>
+        <a href="tel:+917907925646">
+          <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.3 2.2z"/></svg>
+          <span>+91 79079 25646</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">cat ~/.skills</span>
+      </div>
+      <div class="body pad">
+<pre class="box"><span class="h">lang</span>     python · c · java · bash
+         pytorch · httpx · numpy
+<span class="h">tools</span>    git · qemu · burp · ida
+         docker · gh actions ci
+<span class="h">systems</span>  linux kernel build
+         hyprland · arch btw</pre>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">ls ~/88x31</span>
+      </div>
+      <div class="body pad">
+        <div class="btns">
+          <div class="b31 inv">MADE ON<br>GNU/LINUX</div>
+          <div class="b31">powered by<br><b>coffee</b></div>
+          <div class="b31 err">no AI<br>slop*</div>
+          <div class="b31">arch<br>linux btw</div>
+          <div class="b31">hypr<br>land</div>
+          <div class="b31 inv">vim &gt;<br>emacs</div>
+          <div class="b31">best viewed<br>in a <b>tty</b></div>
+          <div class="b31">python<br>&amp; &lt;/&gt; C</div>
+        </div>
+        <div class="quote" style="font-size:11px">* mostly. it wrote this button.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= MIDDLE ================= -->
+  <div class="col mid">
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">cat /etc/motd</span>
+      </div>
+      <div class="body pad">
+        <span class="banner">FROM VULN RESEARCH<br>TO REINFORCEMENT LEARNING</span>
+        <p class="motd">
+          2nd-year B.Tech CS student at Manipal &amp; Linux kernel contributor
+          (mainline + stable). Head of the CTF team <span class="muted">PlayingG0d</span>
+          — a national #1 and international top-10s. Work spans kernel dev,
+          cybersecurity and ML: from crawling leaked keys to teaching a network
+          to play poker on a laptop GPU.
+        </p>
+        <div class="todo">// [now]
+- 2nd yr b.tech @ manipal institute of technology
+- iitm bs data science (online) — diploma level done
+- running ctf team playingg0d
+- rl that fits in 3mb, on hardware that doesn't cost 3 grand</div>
+        <p class="quote">&gt; this site is constantly evolving &lt;3</p>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">cat ~/research/kuhn-poker.md</span>
+      </div>
+      <div class="body pad">
+        <h3 class="k"># Solving Kuhn Poker with Double DQN</h3>
+        <p class="muted" style="margin:0 0 8px">
+          Summer research @ IIM Kozhikode w/ Prof. Mohammed Shahid Abdulla —
+          efficient RL on consumer-grade hardware.
+        </p>
+        <div class="rows">
+          <div class="r"><span class="l">Double DQN as a tractable alternative to CFR</span></div>
+          <div class="r"><span class="l">First working <a class="link" href="https://github.com/Magniquick/gym-kuhn-poker">Gymnasium env</a> for Kuhn Poker</span></div>
+          <div class="r"><span class="l">Nash-like strategies in 1–2 hrs on an MX250</span><span class="m accent">3 MB / pass</span></div>
+        </div>
+        <hr class="d">
+        <div class="stats">
+          <div class="stat"><b><span class="lcd" data-ghost="8-88">1-2h</span></b><small>to converge</small></div>
+          <div class="stat"><b><span class="lcd" data-ghost="888">3MB</span></b><small>forward pass</small></div>
+          <div class="stat"><b>MX250</b><small>entry-level gpu</small></div>
+        </div>
+        <hr class="d">
+        <div class="dim" style="font-size:13px">
+          → <a class="link" href="https://typst.app/project/rSMWAKD03peYDTGXp4Mzjr">paper</a> ·
+          <a class="link" href="https://github.com/Magniquick/reinforcement-learning">project</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">git log --author=navon --community</span>
+      </div>
+      <div class="body pad rows">
+        <div class="r"><span class="l"><a class="link" href="https://github.com/System64fumo/syshud/pull/37">syshud #37</a></span><span class="m">kbd + backlight args</span></div>
+        <div class="r"><span class="l"><a class="link" href="https://github.com/vicinaehq/extensions/pull/66">vicinae/extensions #66</a></span><span class="m">swww fallback</span></div>
+        <div class="r"><span class="l"><a class="link" href="https://github.com/RayBytes/ChatMock/pull/72">ChatMock #72</a></span><span class="m">app compat</span></div>
+        <div class="r"><span class="l"><a class="link" href="https://github.com/TrueMyst/BeatPrints/pull/1">BeatPrints #1</a> · <a class="link" href="https://github.com/TrueMyst/BeatPrints/pull/2">#2</a></span><span class="m">cross-dir + errors</span></div>
+        <hr class="d" style="width:100%">
+        <div class="r"><span class="l dim">mod @ Oh My Zsh discord</span><span class="m"><span class="lcd" data-ghost="888">184</span>k+ ★ project</span></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= RIGHT ================= -->
+  <div class="col right">
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">neofetch</span>
+      </div>
+      <div class="body pad">
+        <div class="neo">
+<pre class="logo">   _____
+  / ._. \
+ | |   | |
+ | |mq | |
+  \_____/
+  |_____|</pre>
+          <div class="kv">
+            <div class="row"><span class="key">host</span><span class="val">magniquick</span></div>
+            <div class="row"><span class="key">os</span><span class="val">arch (cachyos)</span></div>
+            <div class="row"><span class="key">wm</span><span class="val">hyprland</span></div>
+            <div class="row"><span class="key">shell</span><span class="val">zsh + atuin</span></div>
+            <div class="row"><span class="key">term</span><span class="val">kitty</span></div>
+            <div class="row"><span class="key">editor</span><span class="val">nvim</span></div>
+            <div class="row"><span class="key">kernel</span><span class="val">contributor :3</span></div>
+            <div class="row"><span class="key">uptime</span><span class="val">2nd yr b.tech</span></div>
+          </div>
+        </div>
+        <div class="sw">
+          <span style="background:oklch(19% 0 0)"></span><span style="background:oklch(27% 0 0)"></span>
+          <span style="background:oklch(40% 0 0)"></span><span style="background:oklch(50% 0 0)"></span>
+          <span style="background:oklch(75% 0 0)"></span><span style="background:oklch(90% 0 0)"></span>
+          <span style="background:var(--accent)"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">git log ~/kernel</span>
+      </div>
+      <div class="body pad">
+        <div class="dim" style="font-size:13px; margin-bottom:2px">Apr 2025 · v6.12 mainline + v5.10 stable</div>
+        <div class="muted">ALSA: hda/realtek: Add mute LED quirk for HP Pavilion x360 14-dy1xxx</div>
+<pre class="code"><span class="c">commit</span> <span class="a">b11a74ac4f54</span>
+<span class="c">Author:</span> Navon John Lukose
+  enable mute-LED support for
+  ALC295-based Pavilion convertibles</pre>
+        <div class="dim" style="font-size:13px; margin-top:8px">→ <a class="link" href="https://github.com/torvalds/linux/commit/b11a74ac4f545626d0dc95a8ca8c41df90532bf3">mainline commit</a></div>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">./ctf --team PlayingG0d</span>
+      </div>
+      <div class="body pad">
+        <div class="stats" style="justify-content:space-between">
+          <div class="stat"><b><span class="lcd" data-ghost="88">#8</span></b><small>NiteCTF '24 · intl</small></div>
+          <div class="stat"><b><span class="lcd acc" data-ghost="88">#1</span></b><small>Citadel '25 · ₹7.5k</small></div>
+          <div class="stat"><b><span class="lcd" data-ghost="88">#8</span></b><small>NiteCTF '25 · intl</small></div>
+        </div>
+        <hr class="d">
+        <span class="hblock">// authored</span>
+        <div class="rows">
+          <div class="r"><span class="l">Indomitus CTF <span class="dim">(MIST)</span></span><span class="m">stego · crypto</span></div>
+          <div class="r"><span class="l">LLM Token-Shift Cipher</span><span class="m">llama_cpp · gguf</span></div>
+          <div class="r"><span class="l">Polynomial-Gate Encoding</span><span class="m">torch · dill</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">cat security.log</span>
+      </div>
+      <div class="body pad">
+        <div class="rows">
+          <div class="r"><span class="l accent">[ CVE-ish ]</span><span class="m">patched</span></div>
+          <div class="prj"><div class="l">MIT Manipal SLcM</div><div class="desc">exposed 21k+ student records · privately disclosed</div></div>
+          <div class="prj"><div class="l">webbites.io</div><div class="desc">~1k users' private bookmarks leaked · b4a.io misconfig</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="win rise">
+      <div class="bar">
+        <span class="dots"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></span>
+        <span class="sep"></span><span class="name">ls ~/projects</span>
+      </div>
+      <div class="body pad rows">
+        <div class="prj">
+          <div class="r"><span class="l"><a class="link" href="https://github.com/Magniquick/KeyCrawler">KeyCrawler</a></span><span class="star">★ <span class="lcd" data-ghost="888">108</span></span></div>
+          <div class="desc">crawls leaked Android keybox.xml private keys across GitHub — validate, dedup, prune, cached pagination</div>
+        </div>
+        <div class="prj">
+          <div class="r"><span class="l"><a class="link" href="https://github.com/Magniquick/atuin-win">atuin-win</a></span><span class="star">★ <span class="lcd" data-ghost="88">12</span></span></div>
+          <div class="desc">Windows builds for the atuin shell-history sync · msys2 UCRT64 + GH Actions</div>
+        </div>
+        <div class="prj">
+          <div class="r"><span class="l">ml-iit</span></div>
+          <div class="desc">XLM-RoBERTa fake-news detection for Dravidian languages</div>
+        </div>
+        <div class="prj">
+          <div class="r"><span class="l">font-arena</span></div>
+          <div class="desc">React 19 + TS + Vite font tournament · dynamic Google Fonts preview</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="rise">copyleft 2026 · navon john lukose · <span class="dim">built on gnu/linux, powered by coffee</span></footer>
+
+<script>
+  // ---- staggered entrance: assign incremental animation-delay to each .rise (~40ms apart) ----
+  (function(){
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return; // CSS already shows everything instantly under reduced-motion
+    var els = document.querySelectorAll('.rise');
+    els.forEach(function(el, i){
+      el.style.animationDelay = (i * 40) + 'ms';
+    });
+  })();
+</script>
+<script src="pet/oneko.js" data-cat="pet/oneko.gif"></script>
+</body>
+</html>
